@@ -307,9 +307,12 @@
 
     <!-- 云同步状态卡片 -->
     <div class="card">
-      <div class="card-title">☁ 云端实时同步设置</div>
+      <div class="card-title">☁ 云端实时同步</div>
       <div style="font-size: 12px; margin-bottom: 6px;" id="k-sync-status-text">状态：未绑定 GitHub Gist 云同步</div>
-      <button class="btn" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="openSyncPrompt()">⚙ 设置云同步 GitHub Token & Gist</button>
+      <div class="btn-group">
+        <button class="btn btn-solid" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="manualPushCloud()">☁ 立即上传数据到云端</button>
+        <button class="btn" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="openSyncPrompt()">⚙ 设置密钥</button>
+      </div>
     </div>
 
     <!-- 成就看板卡片 -->
@@ -521,7 +524,6 @@
       xhr.send(JSON.stringify(payload));
     }
 
-    // 智能双向合并算法：保障本地新加的书名不会被云端覆盖
     function mergeCloudAndLocal(cloudData) {
       if (!cloudData || !cloudData.books) return;
       var bookMap = {};
@@ -529,7 +531,7 @@
 
       for (var i = 0; i < cloudData.books.length; i++) {
         var cb = cloudData.books[i];
-        if (cb.title === '测试书') continue; // 过滤测试书
+        if (cb.title === '测试书') continue;
         bookMap[cb.id] = cb;
         if (cb.title) bookMap['t_' + cb.title] = cb;
       }
@@ -589,6 +591,15 @@
         }
       };
       xhr.send();
+    }
+
+    function manualPushCloud() {
+      if (!state.gistToken || !state.gistId) {
+        alert('请先点击⚙设置密钥绑定 Token & Gist！');
+        return;
+      }
+      pushCloudData();
+      alert('☁ 数据已主动推送到云端！可在电脑端点击“手动拉取”查看！');
     }
 
     function pushCloudData() {
