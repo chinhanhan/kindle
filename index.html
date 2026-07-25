@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kindle 6寸屏极简阅读计时器</title>
+  <title>Kindle & PC 独立双端阅读成就看板</title>
   <style>
     /* ==========================================================================
        1. 6寸 Kindle 墨水屏超强兼容与高对比度样式 (ES5/E-Ink Optimized)
@@ -21,7 +21,7 @@
       color: #000000;
       line-height: 1.4;
       padding: 8px;
-      max-width: 560px;
+      max-width: 900px;
       margin: 0 auto;
     }
 
@@ -172,7 +172,7 @@
     .sm-btn {
       border: 1.5px solid #000000;
       background: #ffffff;
-      padding: 3px 8px;
+      padding: 4px 8px;
       font-size: 12px;
       font-weight: bold;
       cursor: pointer;
@@ -185,26 +185,87 @@
 
     .hidden { display: none !important; }
 
-    /* PC 端模式样式 */
+    /* PC 端高级大屏样式 */
     .pc-mode-container {
       background: #f4f6f8;
       padding: 20px;
       min-height: 100vh;
+      color: #1f2937;
     }
-    .pc-box {
-      background: #fff;
-      padding: 20px;
+
+    .pc-card-item {
+      background: #ffffff;
       border-radius: 8px;
-      max-width: 900px;
-      margin: 0 auto 20px auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
     }
+
+    .pc-grid-3 {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .pc-stat-box {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 14px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .pc-stat-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .pc-stat-label {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    table.pc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    table.pc-table th, table.pc-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    table.pc-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .pc-action-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .pc-action-btn:hover { background: #1d4ed8; }
+    .pc-btn-red { background: #ef4444; }
+    .pc-btn-red:hover { background: #dc2626; }
   </style>
 </head>
 <body>
 
   <!-- ==========================================================================
-       Kindle 6寸屏极简视图 (默认直接显示，保障 100% 兼容老版本 WebKit)
+       A. KINDLE 6寸屏极简视图 (默认加载，保障 100% 老旧 WebKit 兼容)
        ========================================================================== -->
   <div id="kindle-ui">
     <header>
@@ -260,27 +321,66 @@
       <div id="k-list-box"></div>
     </div>
 
-    <div style="text-align: center; margin-top: 15px; font-size: 12px;">
-      <a href="javascript:void(0)" onclick="switchToPCMode()" style="color: #000; text-decoration: underline;">切换至电脑大屏管理模式 ↗</a>
+    <div style="text-align: center; margin-top: 15px; font-size: 12px; padding-bottom: 20px;">
+      <a href="javascript:void(0)" onclick="switchToPCMode()" style="color: #000; text-decoration: underline; font-weight: bold;">切换至电脑大屏管理模式 ↗</a>
     </div>
   </div>
 
   <!-- ==========================================================================
-       电脑端大屏管理视图 (PC Mode)
+       B. 电脑端大屏管理视图 (PC Dashboard Mode)
        ========================================================================== -->
   <div id="pc-ui" class="pc-mode-container hidden">
-    <div class="pc-box">
-      <h2>📊 个人阅读统计与成就大屏 (PC 管理端)</h2>
-      <p style="font-size:13px; color:#666; margin-top:4px;">针对电脑大屏优化，提供详细历史修正与 CSV 导出</p>
-      <div style="margin-top:15px; display:flex; gap:10px;">
-        <button class="btn btn-solid" style="width:auto; padding:0 15px; height:40px; line-height:36px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
-        <button class="btn" style="width:auto; padding:0 15px; height:40px; line-height:36px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
+    <div class="pc-card-item">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 800;">📊 个人阅读统计与成就大屏 (PC 管理端)</h2>
+          <p style="font-size: 13px; color: #64748b; margin-top: 2px;">与 Kindle 墨水屏数据共享 | 历史记录修改与 CSV 导出</p>
+        </div>
+        <div>
+          <button class="pc-action-btn" onclick="exportCSVData()">📥 导出 CSV 报表</button>
+          <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
+        </div>
       </div>
     </div>
 
-    <div class="pc-box">
-      <h3>📚 单本阅读时长明细</h3>
-      <div id="pc-list-box" style="margin-top:10px;"></div>
+    <div class="pc-grid-3">
+      <div class="pc-stat-box">
+        <div class="pc-stat-label">累计阅读总时长</div>
+        <div class="pc-stat-num" id="pc-stat-time">0 小时</div>
+      </div>
+      <div class="pc-stat-box">
+        <div class="pc-stat-label">已读完图书数量</div>
+        <div class="pc-stat-num" id="pc-stat-completed">0 本</div>
+      </div>
+      <div class="pc-stat-box">
+        <div class="pc-stat-label">总打卡记录次数</div>
+        <div class="pc-stat-num" id="pc-stat-sessions">0 次</div>
+      </div>
+    </div>
+
+    <div class="pc-card-item">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+        <strong style="font-size:15px;">📝 历史阅读明细记录</strong>
+        <button class="pc-action-btn" onclick="doManualAddSession()">➕ 手动补录一次阅读</button>
+      </div>
+      <table class="pc-table">
+        <thead>
+          <tr>
+            <th>打卡时间</th>
+            <th>图书名称</th>
+            <th>本次时长</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="pc-history-tbody">
+          <tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无历史记录</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pc-card-item">
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 10px;">📚 全部图书管理列表</h3>
+      <div id="pc-list-box"></div>
     </div>
   </div>
 
@@ -345,6 +445,7 @@
     function render() {
       renderSelect();
       renderStats();
+      renderPCDashboard();
     }
 
     function renderSelect() {
@@ -504,12 +605,10 @@
       document.getElementById('k-stat-count').innerHTML = state.books.length + '本';
 
       var kBox = document.getElementById('k-list-box');
-      var pcBox = document.getElementById('pc-list-box');
+      if (!kBox) return;
 
       if (state.books.length === 0) {
-        var emptyHtml = '<div style="font-size:12px; text-align:center; padding:8px;">暂无图书数据</div>';
-        if (kBox) kBox.innerHTML = emptyHtml;
-        if (pcBox) pcBox.innerHTML = emptyHtml;
+        kBox.innerHTML = '<div style="font-size:12px; text-align:center; padding:8px;">暂无图书数据</div>';
         return;
       }
 
@@ -524,8 +623,128 @@
                   '</div>' +
                 '</div>';
       }
-      if (kBox) kBox.innerHTML = html;
-      if (pcBox) pcBox.innerHTML = html;
+      kBox.innerHTML = html;
+    }
+
+    function renderPCDashboard() {
+      var totalSec = 0;
+      var completedCount = 0;
+      for (var i = 0; i < state.books.length; i++) {
+        totalSec += (state.books[i].totalSec || 0);
+        if (state.books[i].completed) completedCount++;
+      }
+
+      var timeElem = document.getElementById('pc-stat-time');
+      var compElem = document.getElementById('pc-stat-completed');
+      var sessElem = document.getElementById('pc-stat-sessions');
+
+      if (timeElem) timeElem.innerHTML = (totalSec / 3600).toFixed(1) + ' 小时';
+      if (compElem) compElem.innerHTML = completedCount + ' 本';
+      if (sessElem) sessElem.innerHTML = state.sessions.length + ' 次';
+
+      // 渲染历史明细
+      var tbody = document.getElementById('pc-history-tbody');
+      if (tbody) {
+        if (state.sessions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无历史记录</td></tr>';
+        } else {
+          var hHtml = '';
+          for (var k = state.sessions.length - 1; k >= 0; k--) {
+            var s = state.sessions[k];
+            var bTitle = '已删图书';
+            for (var m = 0; m < state.books.length; m++) {
+              if (state.books[m].id === s.bookId) {
+                bTitle = state.books[m].title;
+                break;
+              }
+            }
+            hHtml += '<tr>' +
+                       '<td>' + new Date(s.time).toLocaleString() + '</td>' +
+                       '<td><strong>《' + escapeStr(bTitle) + '》</strong></td>' +
+                       '<td>' + formatMin(s.sec) + '</td>' +
+                       '<td><button class="pc-action-btn pc-btn-red" style="padding:2px 8px;" onclick="deleteSession(\'' + s.id + '\')">删除</button></td>' +
+                     '</tr>';
+          }
+          tbody.innerHTML = hHtml;
+        }
+      }
+
+      // 渲染 PC 图书管理
+      var pcBox = document.getElementById('pc-list-box');
+      if (pcBox) {
+        if (state.books.length === 0) {
+          pcBox.innerHTML = '<div style="color:#94a3b8; font-size:13px;">暂无图书数据</div>';
+        } else {
+          var pcHtml = '';
+          for (var n = 0; n < state.books.length; n++) {
+            var bItem = state.books[n];
+            pcHtml += '<div style="border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div><strong>《' + escapeStr(bItem.title) + '》</strong> <span style="font-size:12px; color:#64748b;">(累计 ' + formatMin(bItem.totalSec) + ')</span></div>' +
+                        '<div>' +
+                          '<button class="pc-action-btn" style="padding:3px 8px;" onclick="toggleComplete(\'' + bItem.id + '\')">' + (bItem.completed ? '取消读完' : '标记读完') + '</button> ' +
+                          '<button class="pc-action-btn pc-btn-red" style="padding:3px 8px;" onclick="deleteBook(\'' + bItem.id + '\')">删除图书</button>' +
+                        '</div>' +
+                      '</div>';
+          }
+          pcBox.innerHTML = pcHtml;
+        }
+      }
+    }
+
+    function deleteSession(sId) {
+      if (!confirm('确定删除这条历史记录吗？')) return;
+      var newSessions = [];
+      for (var i = 0; i < state.sessions.length; i++) {
+        var s = state.sessions[i];
+        if (s.id === sId) {
+          var book = getBookById(s.bookId);
+          if (book) book.totalSec = Math.max(0, book.totalSec - s.sec);
+        } else {
+          newSessions.push(s);
+        }
+      }
+      state.sessions = newSessions;
+      saveData();
+      render();
+    }
+
+    function getBookById(bId) {
+      for (var i = 0; i < state.books.length; i++) {
+        if (state.books[i].id === bId) return state.books[i];
+      }
+      return null;
+    }
+
+    function doManualAddSession() {
+      var title = prompt('请输入要补录的书名：');
+      if (!title) return;
+      var book = getBookByTitle(title);
+      if (!book) {
+        book = { id: 'b_' + new Date().getTime(), title: title, totalSec: 0, completed: false };
+        state.books.push(book);
+      }
+      var minsStr = prompt('请输入补录分钟数：');
+      var mins = parseInt(minsStr, 10);
+      if (isNaN(mins) || mins <= 0) return alert('请输入有效的分钟数');
+
+      var addedSec = mins * 60;
+      book.totalSec += addedSec;
+      state.sessions.push({
+        id: 's_' + new Date().getTime(),
+        bookId: book.id,
+        sec: addedSec,
+        time: new Date().getTime()
+      });
+      saveData();
+      render();
+      alert('补录成功！');
+    }
+
+    function getBookByTitle(title) {
+      for (var i = 0; i < state.books.length; i++) {
+        if (state.books[i].title === title) return state.books[i];
+      }
+      return null;
     }
 
     function toggleComplete(bId) {
@@ -564,7 +783,7 @@
     }
 
     function exportCSVData() {
-      if (state.sessions.length === 0) return alert('暂无历史记录');
+      if (state.sessions.length === 0) return alert('暂无历史记录可导出');
       var csv = '\uFEFF阅读时间,图书名称,阅读时长(秒)\n';
       for (var i = 0; i < state.sessions.length; i++) {
         var s = state.sessions[i];
