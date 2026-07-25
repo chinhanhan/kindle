@@ -347,7 +347,7 @@
           <p style="font-size: 13px; color: #64748b; margin-top: 2px;">与 Kindle 墨水屏数据共享 | 历史记录修改与 CSV 导出</p>
         </div>
         <div>
-          <button class="pc-action-btn" onclick="fetchCloudData()">🔄 手动拉取云端新数据</button>
+          <button class="pc-action-btn" onclick="fetchCloudData(true)">🔄 手动拉取云端新数据</button>
           <button class="pc-action-btn" style="background:#10b981; margin-left:6px;" onclick="openSyncPrompt()">⚙ 配置 GitHub Gist 云同步</button>
           <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
           <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
@@ -426,7 +426,7 @@
       render();
 
       if (state.gistToken && state.gistId) {
-        fetchCloudData();
+        fetchCloudData(false);
       }
     };
 
@@ -459,7 +459,7 @@
       } catch(e) {}
       
       if (state.gistToken && state.gistId) {
-        pushCloudData();
+        pushCloudData(null);
       }
     }
 
@@ -488,7 +488,7 @@
       if (state.gistToken && !state.gistId) {
         autoCreateGist();
       } else if (state.gistToken && state.gistId) {
-        fetchCloudData();
+        fetchCloudData(true);
       }
     }
 
@@ -506,9 +506,9 @@
             saveData();
             updateSyncStatusText();
             alert('🎉 成功在云端自动创建专属数据 Gist！Gist ID: ' + res.id);
-            pushCloudData();
+            pushCloudData(null);
           } else {
-            alert('创建云端 Gist 失败，请检查 Token 是否有效。');
+            alert('创建云端 Gist 失败，错误状态码: ' + xhr.status);
           }
         }
       };
@@ -574,20 +574,30 @@
       render();
     }
 
-    function fetchCloudData() {
-      if (!state.gistToken || !state.gistId) return;
+    function fetchCloudData(showAlert) {
+      if (!state.gistToken || !state.gistId) {
+        if (showAlert) alert('未检测到绑定的 Token 或 Gist ID，请点击设置！');
+        return;
+      }
       var xhr = new XMLHttpRequest();
       xhr.open('GET', 'https://api.github.com/gists/' + state.gistId, true);
       xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
       xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          try {
-            var res = JSON.parse(xhr.responseText);
-            if (res.files && res.files['kindle_reading_data.json']) {
-              var c = JSON.parse(res.files['kindle_reading_data.json'].content);
-              mergeCloudAndLocal(c);
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              var res = JSON.parse(xhr.responseText);
+              if (res.files && res.files['kindle_reading_data.json']) {
+                var c = JSON.parse(res.files['kindle_reading_data.json'].content);
+                mergeCloudAndLocal(c);
+                if (showAlert) alert('🎉 云端数据同步成功！');
+              }
+            } catch(e) {
+              if (showAlert) alert('解析云端数据格式失败');
             }
-          } catch(e) {}
+          } else {
+            if (showAlert) alert('拉取云端失败，错误代码: ' + xhr.status);
+          }
         }
       };
       xhr.send();
@@ -598,17 +608,26 @@
         alert('请先点击⚙设置密钥绑定 Token & Gist！');
         return;
       }
-      pushCloudData();
-      alert('☁ 数据已主动推送到云端！可在电脑端点击“手动拉取”查看！');
+      pushCloudData(function(success, msg) {
+        alert(msg);
+      });
     }
 
-    function pushCloudData() {
+    function pushCloudData(cb) {
       if (!state.gistToken || !state.gistId) return;
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://api.github.com/gists/' + state.gistId, true);
-      xhr.setRequestHeader('X-HTTP-Method-Override', 'PATCH');
+      xhr.open('PATCH', 'https://api.github.com/gists/' + state.gistId, true);
       xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
       xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            if (cb) cb(true, '☁ 数据已成功上传同步到云端！');
+          } else {
+            if (cb) cb(false, '上传到云端失败，错误代码: ' + xhr.status);
+          }
+        }
+      };
       var payload = {
         files: {
           'kindle_reading_data.json': {
