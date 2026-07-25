@@ -524,6 +524,7 @@
       xhr.send(JSON.stringify(payload));
     }
 
+    // 智能双向合并算法：保障本地新加的书名与数据不会丢失，合并后反向同步上云
     function mergeCloudAndLocal(cloudData) {
       if (!cloudData || !cloudData.books) return;
       var bookMap = {};
@@ -572,6 +573,9 @@
       }
       localStorage.setItem('k_reading_v4', JSON.stringify(state));
       render();
+
+      // 合并完成后，自动将合并后的最新数据反向推送到云端！
+      pushCloudData(null);
     }
 
     function fetchCloudData(showAlert) {
@@ -616,15 +620,17 @@
     function pushCloudData(cb) {
       if (!state.gistToken || !state.gistId) return;
       var xhr = new XMLHttpRequest();
-      xhr.open('PATCH', 'https://api.github.com/gists/' + state.gistId, true);
+      // 使用兼容性最强、跨域最安全的 POST + X-HTTP-Method-Override PATCH
+      xhr.open('POST', 'https://api.github.com/gists/' + state.gistId, true);
+      xhr.setRequestHeader('X-HTTP-Method-Override', 'PATCH');
       xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
+          if (xhr.status === 200 || xhr.status === 201) {
             if (cb) cb(true, '☁ 数据已成功上传同步到云端！');
           } else {
-            if (cb) cb(false, '上传到云端失败，错误代码: ' + xhr.status);
+            if (cb) cb(false, '上传到云端失败，错误状态码: ' + xhr.status);
           }
         }
       };
