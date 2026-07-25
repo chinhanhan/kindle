@@ -548,7 +548,9 @@
     function pushCloudData() {
       if (!state.gistToken || !state.gistId) return;
       var xhr = new XMLHttpRequest();
-      xhr.open('PATCH', 'https://api.github.com/gists/' + state.gistId, true);
+      // 使用兼容性最好的 POST + X-HTTP-Method-Override 规避老版本 WebKit 对 PATCH 的限制
+      xhr.open('POST', 'https://api.github.com/gists/' + state.gistId, true);
+      xhr.setRequestHeader('X-HTTP-Method-Override', 'PATCH');
       xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
       xhr.setRequestHeader('Content-Type', 'application/json');
       var payload = {
