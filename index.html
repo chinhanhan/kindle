@@ -521,6 +521,57 @@
       xhr.send(JSON.stringify(payload));
     }
 
+    // 智能双向合并算法：保障本地新加的书名不会被云端覆盖
+    function mergeCloudAndLocal(cloudData) {
+      if (!cloudData || !cloudData.books) return;
+      var bookMap = {};
+      var mergedBooks = [];
+
+      for (var i = 0; i < cloudData.books.length; i++) {
+        var cb = cloudData.books[i];
+        if (cb.title === '测试书') continue; // 过滤测试书
+        bookMap[cb.id] = cb;
+        if (cb.title) bookMap['t_' + cb.title] = cb;
+      }
+
+      for (var j = 0; j < state.books.length; j++) {
+        var lb = state.books[j];
+        if (lb.title === '测试书') continue;
+        var existing = bookMap[lb.id] || (lb.title ? bookMap['t_' + lb.title] : null);
+        if (existing) {
+          existing.totalSec = Math.max(existing.totalSec || 0, lb.totalSec || 0);
+          existing.completed = existing.completed || lb.completed;
+        } else {
+          bookMap[lb.id] = lb;
+        }
+      }
+
+      for (var key in bookMap) {
+        if (key.indexOf('t_') !== 0 && bookMap.hasOwnProperty(key)) {
+          mergedBooks.push(bookMap[key]);
+        }
+      }
+
+      var sessMap = {};
+      var mergedSessions = [];
+      var allSessions = (cloudData.sessions || []).concat(state.sessions || []);
+      for (var k = 0; k < allSessions.length; k++) {
+        var s = allSessions[k];
+        if (!sessMap[s.id]) {
+          sessMap[s.id] = s;
+          mergedSessions.push(s);
+        }
+      }
+
+      state.books = mergedBooks;
+      state.sessions = mergedSessions;
+      if (!state.activeId && state.books.length > 0) {
+        state.activeId = state.books[0].id;
+      }
+      localStorage.setItem('k_reading_v4', JSON.stringify(state));
+      render();
+    }
+
     function fetchCloudData() {
       if (!state.gistToken || !state.gistId) return;
       var xhr = new XMLHttpRequest();
@@ -532,12 +583,7 @@
             var res = JSON.parse(xhr.responseText);
             if (res.files && res.files['kindle_reading_data.json']) {
               var c = JSON.parse(res.files['kindle_reading_data.json'].content);
-              if (c && c.books) {
-                state.books = c.books;
-                state.sessions = c.sessions || [];
-                localStorage.setItem('k_reading_v4', JSON.stringify(state));
-                render();
-              }
+              mergeCloudAndLocal(c);
             }
           } catch(e) {}
         }
@@ -548,7 +594,6 @@
     function pushCloudData() {
       if (!state.gistToken || !state.gistId) return;
       var xhr = new XMLHttpRequest();
-      // 使用兼容性最好的 POST + X-HTTP-Method-Override 规避老版本 WebKit 对 PATCH 的限制
       xhr.open('POST', 'https://api.github.com/gists/' + state.gistId, true);
       xhr.setRequestHeader('X-HTTP-Method-Override', 'PATCH');
       xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
