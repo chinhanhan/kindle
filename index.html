@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindle & PC 独立双端阅读成就看板</title>
+  <style>
+    /* ==========================================================================
+       1. 通用基础与 Kindle 墨水屏高对比度样式 (Base & E-Ink Styles)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #000000;
+      line-height: 1.5;
+    }
+
+    /* Kindle 极简视图专用容器 */
+    .kindle-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .card {
+      border: 2px solid #000000;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #ffffff;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: bold;
+      border-bottom: 1px dashed #000000;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    select, input[type="text"], input[type="number"], input[type="datetime-local"] {
+      width: 100%;
+      height: 42px;
+      border: 2px solid #000000;
+      padding: 0 10px;
+      font-size: 15px;
+      background: #ffffff;
+      color: #000000;
+      outline: none;
+      border-radius: 0;
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      height: 46px;
+      line-height: 42px;
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 8px;
+      text-decoration: none;
+    }
+
+    .btn:active, .btn.active {
+      background: #000000;
+      color: #ffffff;
+    }
+
+    .btn-solid {
+      background: #000000;
+      color: #ffffff;
+    }
+
+    .btn-solid:active {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-group .btn {
+      flex: 1;
+    }
+
+    .timer-display {
+      text-align: center;
+      padding: 15px 0;
+    }
+
+    .timer-number {
+      font-size: 50px;
+      font-weight: 900;
+      font-family: Courier, monospace, sans-serif;
+      letter-spacing: 2px;
+    }
+
+    .timer-book-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .stat-grid {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat-box {
+      flex: 1;
+      border: 2px solid #000000;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .stat-lbl {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .sm-btn {
+      border: 1.5px solid #000000;
+      background: #ffffff;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .sm-btn:active {
+      background: #000000;
+      color: #ffffff;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ==========================================================================
+       2. 电脑端高级数据可视化与管理大屏样式 (PC Dashboard Styles)
+       ========================================================================== */
+    .pc-layout {
+      background-color: #f4f6f8;
+      min-height: 100vh;
+      padding: 24px;
+      color: #1a1a1a;
+    }
+
+    .pc-header {
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .pc-title {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .pc-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 850px) {
+      .pc-grid { grid-template-columns: 1fr; }
+    }
+
+    .pc-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+
+    .pc-card-header {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .pc-stat-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .pc-stat-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 16px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .pc-stat-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .pc-stat-desc {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 260px;
+      width: 100%;
+    }
+
+    /* 数据表格 */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    table.data-table th, table.data-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    table.data-table th {
+      background-color: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .pc-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .pc-btn:hover { background: #1d4ed8; }
+    .pc-btn-sec { background: #64748b; }
+    .pc-btn-sec:hover { background: #475569; }
+    .pc-btn-danger { background: #ef4444; }
+    .pc-btn-danger:hover { background: #dc2626; }
+
+    .sync-status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .sync-online { background: #dcfce7; color: #166534; }
+    .sync-offline { background: #feefc3; color: #854d0e; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部模式切换与密钥状态 -->
+  <div style="background: #000; color: #fff; padding: 6px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <span>当前模式：</span>
+      <strong id="mode-indicator">加载中...</strong>
+      <button onclick="toggleViewMode()" style="margin-left: 10px; padding: 2px 6px; font-size: 11px; cursor: pointer;">切换视图 (Kindle ↔ 电脑)</button>
+    </div>
+    <div>
+      <span id="github-sync-indicator" class="sync-status-badge sync-offline">云同步未配置</span>
+      <button onclick="openSyncSettings()" style="margin-left: 6px; padding: 2px 6px; font-size: 11px; cursor: pointer;">⚙ 云同步设置</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       A. KINDLE 极简高对比度视图 (Kindle Minimalist Mode)
+       ========================================================================== -->
+  <div id="kindle-view" class="kindle-container hidden">
+    <header style="border-bottom: 3px solid #000; padding-bottom: 6px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+      <h1 style="font-size: 18px; font-weight: 900;">📖 Kindle 阅读计时器</h1>
+      <span style="border: 1px solid #000; padding: 2px 5px; font-size: 12px; font-weight: bold;" id="kindle-clock">00:00</span>
+    </header>
+
+    <!-- 选择图书 -->
+    <div class="card">
+      <div class="card-title">① 选择图书</div>
+      <select id="k-book-select" onchange="onBookSelectChange(this.value)">
+        <option value="">-- 请选择图书 --</option>
+      </select>
+      
+      <div id="k-add-box" class="hidden" style="margin-top: 8px;">
+        <input type="text" id="k-new-book-title" placeholder="输入书名，如《三体》">
+        <div class="btn-group">
+          <button class="btn btn-solid" onclick="confirmAddBook('k-new-book-title')">确认添加</button>
+          <button class="btn" onclick="toggleAddBookBox('k-add-box', false)">取消</button>
+        </div>
+      </div>
+      <button id="k-btn-show-add" class="btn" onclick="toggleAddBookBox('k-add-box', true)">➕ 添加新书</button>
+    </div>
+
+    <!-- 计时核心区 -->
+    <div class="card">
+      <div class="card-title">② 正在阅读</div>
+      <div class="timer-display">
+        <div class="timer-book-name" id="k-display-book-name">未选择图书</div>
+        <div class="timer-number" id="k-timer-text">00:00:00</div>
+      </div>
+
+      <div class="btn-group">
+        <button id="k-btn-start" class="btn btn-solid" onclick="startTimer()">▶ 开始阅读</button>
+        <button id="k-btn-pause" class="btn hidden" onclick="pauseTimer()">⏸ 暂停</button>
+      </div>
+      <button id="k-btn-finish" class="btn hidden" onclick="finishSession()" style="margin-top: 6px;">⏹ 完成并同步记录</button>
+    </div>
+
+    <!-- 极简成就榜 -->
+    <div class="card">
+      <div class="card-title">🏆 累计成就</div>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-lbl">总用时</div>
+          <div class="stat-val" id="k-total-time">0分</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">累计书本</div>
+          <div class="stat-val" id="k-total-books">0本</div>
+        </div>
+      </div>
+      <div class="card-title" style="margin-top: 12px;">单本用时</div>
+      <div id="k-books-list"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       B. 电脑大屏数据分析与管理看板 (PC Dashboard Mode)
+       ========================================================================== -->
+  <div id="pc-view" class="pc-layout hidden">
+    <div class="pc-header">
+      <div>
+        <div class="pc-title">📊 个人阅读统计与成就大屏 (PC 管理端)</div>
+        <div style="font-size: 13px; color: #64748b; margin-top: 4px;">自动与 Kindle 墨水屏同步数据 | 丰富图表分析与历史修正</div>
+      </div>
+      <div>
+        <button class="pc-btn" onclick="syncDataFromCloud()">🔄 立即拉取云端新数据</button>
+        <button class="pc-btn pc-btn-sec" onclick="exportCSV()">📥 导出 CSV / Excel</button>
+      </div>
+    </div>
+
+    <div class="pc-grid">
+      <!-- 左侧：统计与大图表 -->
+      <div>
+        <!-- 3大核心指标卡 -->
+        <div class="pc-stat-cards">
+          <div class="pc-stat-item">
+            <div class="pc-stat-desc">累计总阅读时长</div>
+            <div class="pc-stat-num" id="pc-stat-total-time">0 小时</div>
+          </div>
+          <div class="pc-stat-item">
+            <div class="pc-stat-desc">读完图书数量</div>
+            <div class="pc-stat-num" id="pc-stat-finished-count">0 本</div>
+          </div>
+          <div class="pc-stat-item">
+            <div class="pc-stat-desc">总阅读记录次数</div>
+            <div class="pc-stat-num" id="pc-stat-session-count">0 次</div>
+          </div>
+        </div>
+
+        <!-- 详细历史记录明细表 (支持修正与手动补录) -->
+        <div class="pc-card">
+          <div class="pc-card-header">
+            <span>📝 阅读历史明细列表 (可修改与删改错误记录)</span>
+            <button class="pc-btn" onclick="openManualAddModal()">➕ 手动补录一次阅读</button>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>阅读时间</th>
+                  <th>图书名称</th>
+                  <th>本次用时</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="pc-history-tbody">
+                <tr><td colspan="4" style="text-align: center; color: #94a3b8;">暂无历史记录</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：图书列表管理 & 云端设置 -->
+      <div>
+        <div class="pc-card">
+          <div class="pc-card-header">📚 全部图书列表</div>
+          <div id="pc-books-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 云同步配置 Modal -->
+  <div id="sync-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+    <div style="background: #fff; width: 90%; max-width: 500px; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+      <h3 style="margin-bottom: 12px;">⚙ 配置 GitHub 云端免费同步</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
+        配置后，Kindle 和电脑端将自动同步同一个 Gist JSON 数据库。
+      </p>
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 12px; font-weight: bold;">GitHub Token (ghp_...):</label>
+        <input type="text" id="cfg-github-token" placeholder="输入 GitHub Personal Access Token">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="font-size: 12px; font-weight: bold;">Gist ID (留空会自动创建):</label>
+        <input type="text" id="cfg-github-gist" placeholder="例如: 8a9b7c6d5e4f...">
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="pc-btn" style="flex:1;" onclick="saveSyncSettings()">保存设置并建立同步</button>
+        <button class="pc-btn pc-btn-sec" style="flex:1;" onclick="closeSyncSettings()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================================================
+    // 逻辑实现 (Core Application Controller)
+    // ==========================================================================
+    let appData = {
+      books: [],       // [{ id, title, totalSeconds, completed }]
+      sessions: [],    // [{ id, bookId, seconds, timestamp }]
+      activeBookId: null,
+      syncConfig: { token: '', gistId: '' }
+    };
+
+    let timerState = {
+      isRunning: false,
+      isPaused: false,
+      startTime: null,
+      elapsedSeconds: 0,
+      intervalId: null
+    };
+
+    let currentMode = 'pc'; // 'kindle' 或 'pc'
+
+    window.onload = function() {
+      loadLocalData();
+      detectViewMode();
+      startClock();
+      renderAll();
+
+      // 如果配置了云同步，启动时自动拉取云端
+      if (appData.syncConfig.token && appData.syncConfig.gistId) {
+        syncDataFromCloud();
+      }
+    };
+
+    // 自动检测视图模式 (根据 URL 参数 ?mode=kindle 或屏幕宽度 / UserAgent)
+    function detectViewMode() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const modeParam = urlParams.get('mode');
+      const ua = navigator.userAgent.toLowerCase();
+
+      if (modeParam === 'kindle' || ua.includes('kindle') || ua.includes('book') || window.innerWidth < 600) {
+        setMode('kindle');
+      } else {
+        setMode('pc');
+      }
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('mode-indicator').innerText = mode === 'kindle' ? 'Kindle 墨水屏极简版' : '电脑大屏分析版';
+      if (mode === 'kindle') {
+        document.getElementById('kindle-view').classList.remove('hidden');
+        document.getElementById('pc-view').classList.add('hidden');
+      } else {
+        document.getElementById('kindle-view').classList.add('hidden');
+        document.getElementById('pc-view').classList.remove('hidden');
+      }
+    }
+
+    function toggleViewMode() {
+      setMode(currentMode === 'kindle' ? 'pc' : 'kindle');
+      renderAll();
+    }
+
+    function startClock() {
+      function tick() {
+        const now = new Date();
+        const str = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        const elem = document.getElementById('kindle-clock');
+        if (elem) elem.innerText = str;
+      }
+      tick();
+      setInterval(tick, 30000);
+    }
+
+    // 数据持久化
+    function loadLocalData() {
+      try {
+        const saved = localStorage.getItem('kindle_reading_app_v2');
+        if (saved) {
+          appData = JSON.parse(saved);
+        }
+      } catch(e) { console.error(e); }
+      updateSyncStatusUI();
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem('kindle_reading_app_v2', JSON.stringify(appData));
+      } catch(e) { console.error(e); }
+      // 每次本地数据变更，若配置了云端则后台自动推到 GitHub Gist
+      if (appData.syncConfig.token && appData.syncConfig.gistId) {
+        pushDataToCloud();
+      }
+    }
+
+    // 全局渲染入口
+    function renderAll() {
+      renderBookSelects();
+      renderKindleStats();
+      renderPCDashboard();
+    }
+
+    // 图书选择框
+    function renderBookSelects() {
+      const kSelect = document.getElementById('k-book-select');
+      if (!kSelect) return;
+      kSelect.innerHTML = '<option value="">-- 请选择图书 --</option>';
+
+      appData.books.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.innerText = (b.completed ? '✔ ' : '') + b.title + ' (' + formatMinText(b.totalSeconds) + ')';
+        if (b.id === appData.activeBookId) opt.selected = true;
+        kSelect.appendChild(opt);
+      });
+
+      const nameElem = document.getElementById('k-display-book-name');
+      if (nameElem) {
+        const activeBook = appData.books.find(b => b.id === appData.activeBookId);
+        nameElem.innerText = activeBook ? '《' + activeBook.title + '》' : '未选择图书';
+      }
+    }
+
+    function onBookSelectChange(val) {
+      appData.activeBookId = val || null;
+      saveData();
+      renderAll();
+    }
+
+    function toggleAddBookBox(boxId, show) {
+      const box = document.getElementById(boxId);
+      if (show) box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function confirmAddBook(inputId) {
+      const input = document.getElementById(inputId);
+      const title = input.value.trim();
+      if (!title) return alert('请输入有效书名');
+
+      const newBook = {
+        id: 'book_' + Date.now(),
+        title: title,
+        totalSeconds: 0,
+        completed: false
+      };
+      appData.books.push(newBook);
+      appData.activeBookId = newBook.id;
+      input.value = '';
+      saveData();
+      renderAll();
+    }
+
+    // 计时核心逻辑
+    function startTimer() {
+      if (!appData.activeBookId) return alert('请先选择或新建一本图书！');
+      if (timerState.isRunning && !timerState.isPaused) return;
+
+      timerState.isRunning = true;
+      timerState.isPaused = false;
+      timerState.startTime = Date.now() - (timerState.elapsedSeconds * 1000);
+
+      document.getElementById('k-btn-start').classList.add('hidden');
+      document.getElementById('k-btn-pause').classList.remove('hidden');
+      document.getElementById('k-btn-finish').classList.remove('hidden');
+
+      clearInterval(timerState.intervalId);
+      timerState.intervalId = setInterval(tickTimer, 1000);
+    }
+
+    function pauseTimer() {
+      if (!timerState.isRunning) return;
+      timerState.isPaused = true;
+      clearInterval(timerState.intervalId);
+      document.getElementById('k-btn-start').innerText = '▶ 继续阅读';
+      document.getElementById('k-btn-start').classList.remove('hidden');
+      document.getElementById('k-btn-pause').classList.add('hidden');
+    }
+
+    function tickTimer() {
+      if (!timerState.isRunning || timerState.isPaused) return;
+      timerState.elapsedSeconds = Math.floor((Date.now() - timerState.startTime) / 1000);
+      const sec = timerState.elapsedSeconds;
+      const hrs = String(Math.floor(sec / 3600)).padStart(2,'0');
+      const mins = String(Math.floor((sec % 3600) / 60)).padStart(2,'0');
+      const secs = String(sec % 60).padStart(2,'0');
+      document.getElementById('k-timer-text').innerText = hrs + ':' + mins + ':' + secs;
+    }
+
+    function finishSession() {
+      if (timerState.elapsedSeconds < 5) {
+        if (!confirm('计时不足5秒，取消保存吗？')) return;
+        resetTimerUI();
+        return;
+      }
+      clearInterval(timerState.intervalId);
+
+      const book = appData.books.find(b => b.id === appData.activeBookId);
+      if (book) {
+        book.totalSeconds += timerState.elapsedSeconds;
+        appData.sessions.push({
+          id: 'sess_' + Date.now(),
+          bookId: book.id,
+          seconds: timerState.elapsedSeconds,
+          timestamp: new Date().toISOString()
+        });
+        saveData();
+      }
+
+      alert('🎉 阅读成功记录！用时 ' + formatMinText(timerState.elapsedSeconds));
+      resetTimerUI();
+      renderAll();
+    }
+
+    function resetTimerUI() {
+      clearInterval(timerState.intervalId);
+      timerState.isRunning = false;
+      timerState.isPaused = false;
+      timerState.elapsedSeconds = 0;
+      document.getElementById('k-timer-text').innerText = '00:00:00';
+      document.getElementById('k-btn-start').innerText = '▶ 开始阅读';
+      document.getElementById('k-btn-start').classList.remove('hidden');
+      document.getElementById('k-btn-pause').classList.add('hidden');
+      document.getElementById('k-btn-finish').classList.add('hidden');
+    }
+
+    // 渲染 Kindle 端极简统计
+    function renderKindleStats() {
+      let totalSec = 0;
+      appData.books.forEach(b => totalSec += (b.totalSeconds || 0));
+      document.getElementById('k-total-time').innerText = formatMinText(totalSec);
+      document.getElementById('k-total-books').innerText = appData.books.length + '本';
+
+      const listElem = document.getElementById('k-books-list');
+      if (!listElem) return;
+      if (appData.books.length === 0) {
+        listElem.innerHTML = '<div style="font-size:12px; text-align:center; padding:8px;">暂无图书数据</div>';
+        return;
+      }
+      let html = '';
+      appData.books.forEach(b => {
+        html += `
+          <div style="border-bottom:1px solid #000; padding:6px 0; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+            <div>${b.completed ? '✔ ' : ''}《${escapeHtml(b.title)}》 (<strong>${formatMinText(b.totalSeconds)}</strong>)</div>
+            <button class="sm-btn" onclick="toggleBookComplete('${b.id}')">${b.completed ? '未完' : '已读完'}</button>
+          </div>
+        `;
+      });
+      listElem.innerHTML = html;
+    }
+
+    // 渲染 PC 端数据大屏
+    function renderPCDashboard() {
+      let totalSec = 0;
+      let finishedCount = 0;
+      appData.books.forEach(b => {
+        totalSec += (b.totalSeconds || 0);
+        if (b.completed) finishedCount++;
+      });
+
+      document.getElementById('pc-stat-total-time').innerText = (totalSec / 3600).toFixed(1) + ' 小时';
+      document.getElementById('pc-stat-finished-count').innerText = finishedCount + ' 本';
+      document.getElementById('pc-stat-session-count').innerText = appData.sessions.length + ' 次';
+
+      // 渲染 PC 历史数据表格
+      const tbody = document.getElementById('pc-history-tbody');
+      if (!tbody) return;
+      if (appData.sessions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8;">暂无阅读记录，可在 Kindle 端开始计时打卡</td></tr>';
+      } else {
+        let html = '';
+        // 倒序展示最近记录
+        [...appData.sessions].reverse().forEach(s => {
+          const book = appData.books.find(b => b.id === s.bookId);
+          const title = book ? book.title : '已删除图书';
+          const timeStr = new Date(s.timestamp).toLocaleString();
+          html += `
+            <tr>
+              <td>${timeStr}</td>
+              <td><strong>《${escapeHtml(title)}》</strong></td>
+              <td>${formatMinText(s.seconds)}</td>
+              <td>
+                <button class="pc-btn pc-btn-danger" style="padding:2px 8px; font-size:12px;" onclick="deleteSession('${s.id}')">删除记录</button>
+              </td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+      }
+
+      // 渲染 PC 图书列表
+      const pcBooksElem = document.getElementById('pc-books-list');
+      if (pcBooksElem) {
+        let bHtml = '';
+        appData.books.forEach(b => {
+          bHtml += `
+            <div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong style="font-size:15px;">《${escapeHtml(b.title)}》</strong>
+                <div style="font-size:12px; color:#64748b; margin-top:2px;">累计用时：${formatMinText(b.totalSeconds)}</div>
+              </div>
+              <div>
+                <button class="pc-btn pc-btn-sec" style="padding:4px 8px; font-size:12px;" onclick="toggleBookComplete('${b.id}')">${b.completed ? '取消读完' : '标记读完'}</button>
+                <button class="pc-btn pc-btn-danger" style="padding:4px 8px; font-size:12px; margin-left:4px;" onclick="deleteBook('${b.id}')">删除图书</button>
+              </div>
+            </div>
+          `;
+        });
+        pcBooksElem.innerHTML = bHtml || '<div style="color:#94a3b8; font-size:13px;">暂无图书</div>';
+      }
+    }
+
+    function deleteSession(sessId) {
+      if (!confirm('确定删除这条阅读记录吗？')) return;
+      const sess = appData.sessions.find(s => s.id === sessId);
+      if (sess) {
+        const book = appData.books.find(b => b.id === sess.bookId);
+        if (book) book.totalSeconds = Math.max(0, book.totalSeconds - sess.seconds);
+        appData.sessions = appData.sessions.filter(s => s.id !== sessId);
+        saveData();
+        renderAll();
+      }
+    }
+
+    function toggleBookComplete(bId) {
+      const b = appData.books.find(x => x.id === bId);
+      if (b) {
+        b.completed = !b.completed;
+        saveData();
+        renderAll();
+      }
+    }
+
+    function deleteBook(bId) {
+      if (!confirm('删除图书将保留历史时长，确定删除吗？')) return;
+      appData.books = appData.books.filter(x => x.id !== bId);
+      if (appData.activeBookId === bId) appData.activeBookId = null;
+      saveData();
+      renderAll();
+    }
+
+    function openManualAddModal() {
+      const title = prompt('请输入要补录的书名：');
+      if (!title) return;
+      let book = appData.books.find(b => b.title === title);
+      if (!book) {
+        book = { id: 'book_' + Date.now(), title: title, totalSeconds: 0, completed: false };
+        appData.books.push(book);
+      }
+      const minsStr = prompt('请输入补录时长（单位：分钟）：');
+      const mins = parseInt(minsStr, 10);
+      if (isNaN(mins) || mins <= 0) return alert('请输入有效的分钟数');
+
+      const addedSec = mins * 60;
+      book.totalSeconds += addedSec;
+      appData.sessions.push({
+        id: 'sess_' + Date.now(),
+        bookId: book.id,
+        seconds: addedSec,
+        timestamp: new Date().toISOString()
+      });
+      saveData();
+      renderAll();
+      alert('补录成功！');
+    }
+
+    // 导出 CSV / Excel
+    function exportCSV() {
+      if (appData.sessions.length === 0) return alert('暂无记录可导出');
+      let csv = '\uFEFF阅读时间,图书名称,阅读时长(秒),阅读时长(文本)\n';
+      appData.sessions.forEach(s => {
+        const book = appData.books.find(b => b.id === s.bookId);
+        const title = book ? book.title : '已删图书';
+        csv += `"${new Date(s.timestamp).toLocaleString()}","${title}",${s.seconds},"${formatMinText(s.seconds)}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `Kindle_Reading_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // GitHub Gist 云端 API 同步逻辑
+    function openSyncSettings() {
+      document.getElementById('cfg-github-token').value = appData.syncConfig.token || '';
+      document.getElementById('cfg-github-gist').value = appData.syncConfig.gistId || '';
+      document.getElementById('sync-modal').classList.remove('hidden');
+    }
+
+    function closeSyncSettings() {
+      document.getElementById('sync-modal').classList.add('hidden');
+    }
+
+    function saveSyncSettings() {
+      const token = document.getElementById('cfg-github-token').value.trim();
+      const gistId = document.getElementById('cfg-github-gist').value.trim();
+      appData.syncConfig = { token, gistId };
+      saveData();
+      closeSyncSettings();
+      updateSyncStatusUI();
+      if (token) syncDataFromCloud();
+    }
+
+    function updateSyncStatusUI() {
+      const badge = document.getElementById('github-sync-indicator');
+      if (appData.syncConfig.token && appData.syncConfig.gistId) {
+        badge.className = 'sync-status-badge sync-online';
+        badge.innerText = '☁ 云端已绑定';
+      } else {
+        badge.className = 'sync-status-badge sync-offline';
+        badge.innerText = '☁ 未绑定云同步';
+      }
+    }
+
+    async function syncDataFromCloud() {
+      const { token, gistId } = appData.syncConfig;
+      if (!token || !gistId) return;
+
+      try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+          headers: { 'Authorization': `token ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.files && json.files['kindle_reading_data.json']) {
+            const cloudContent = JSON.parse(json.files['kindle_reading_data.json'].content);
+            if (cloudContent && cloudContent.books) {
+              appData.books = cloudContent.books;
+              appData.sessions = cloudContent.sessions || [];
+              localStorage.setItem('kindle_reading_app_v2', JSON.stringify(appData));
+              renderAll();
+              console.log('云端同步成功');
+            }
+          }
+        }
+      } catch (e) {
+        console.error('云端同步失败:', e);
+      }
+    }
+
+    async function pushDataToCloud() {
+      const { token, gistId } = appData.syncConfig;
+      if (!token || !gistId) return;
+
+      try {
+        const payload = {
+          files: {
+            'kindle_reading_data.json': {
+              content: JSON.stringify({ books: appData.books, sessions: appData.sessions }, null, 2)
+            }
+          }
+        };
+        await fetch(`https://api.github.com/gists/${gistId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.error('推送云端失败:', e);
+      }
+    }
+
+    // 格式化辅助函数
+    function formatMinText(secs) {
+      if (!secs || secs <= 0) return '0分钟';
+      const h = Math.floor(secs / 3600);
+      const m = Math.floor((secs % 3600) / 60);
+      if (h > 0) return h + '小时' + m + '分';
+      return (m || 1) + '分钟';
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+  </script>
+</body>
+</html>
