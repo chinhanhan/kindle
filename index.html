@@ -408,6 +408,11 @@
       intervalId: null
     };
 
+    function getApiUrl() {
+      var origin = window.location.protocol + '//' + window.location.host;
+      return origin + '/api/sync';
+    }
+
     window.onload = function() {
       loadData();
       startClock();
@@ -502,7 +507,7 @@
 
     function fetchCloudData(showAlert) {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', '/api/sync', true);
+      xhr.open('GET', getApiUrl(), true);
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
@@ -529,14 +534,14 @@
 
     function pushCloudData(cb) {
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/sync', true);
+      xhr.open('POST', getApiUrl(), true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
             if (cb) cb(true, '☁ 数据已成功上传同步到云端！');
           } else {
-            if (cb) cb(false, '上传到云端失败，状态码: ' + xhr.status);
+            if (cb) cb(false, '上传到云端失败，状态码: ' + xhr.status + ' (' + xhr.responseText + ')');
           }
         }
       };

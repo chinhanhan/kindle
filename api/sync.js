@@ -17,7 +17,6 @@ export default async function handler(req, res) {
 
   const token = DEFAULT_TOKEN;
   const gistId = process.env.GIST_ID || DEFAULT_GIST_ID;
-
   const authHeader = 'token ' + token;
 
   // GET: 拉取云端最新数据
@@ -46,9 +45,16 @@ export default async function handler(req, res) {
   // POST: Kindle 或 PC 提交最新数据并反向写回云端
   if (req.method === 'POST') {
     try {
-      const body = req.body;
-      if (!body || !body.books) {
-        return res.status(400).json({ error: 'Invalid payload' });
+      let body = req.body;
+      // 兼容老版本 Kindle WebKit 传过来的 raw string 格式 JSON
+      if (typeof body === 'string') {
+        try {
+          body = JSON.parse(body);
+        } catch(e) {}
+      }
+
+      if (!body || !Array.isArray(body.books)) {
+        return res.status(400).json({ error: 'Invalid payload, missing books array' });
       }
 
       const patchPayload = {
