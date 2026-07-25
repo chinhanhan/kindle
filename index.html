@@ -307,9 +307,12 @@
 
     <!-- 云同步状态卡片 -->
     <div class="card">
-      <div class="card-title">☁ 无缝云端实时同步 (全自动免配置)</div>
+      <div class="card-title">☁ 无缝云端实时同步 (GET双向保底)</div>
       <div style="font-size: 12px; margin-bottom: 6px;" id="k-sync-status-text">状态：<strong style="color:green;">☁ 已开启全自动同源云同步</strong></div>
-      <button class="btn btn-solid" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="manualPushCloud()">☁ 立即上传数据到云端</button>
+      <div class="btn-group">
+        <button class="btn btn-solid" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="manualPushCloud()">☁ 立即上传数据到云端</button>
+        <button class="btn" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="exportSyncCode()">📋 导出同步代码</button>
+      </div>
     </div>
 
     <!-- 成就看板卡片 -->
@@ -345,6 +348,7 @@
         </div>
         <div>
           <button class="pc-action-btn" onclick="fetchCloudData(true)">🔄 手动拉取云端新数据</button>
+          <button class="pc-action-btn" style="background:#8b5cf6; margin-left:6px;" onclick="importSyncCode()">📥 导入 Kindle 数据代码</button>
           <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
           <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
         </div>
@@ -532,24 +536,59 @@
       });
     }
 
+    // 采用 GET 方式提交 URL 参数 (零 CORS 预检，100% 强效保底兼容老版本 Kindle)
     function pushCloudData(cb) {
+      var payloadStr = JSON.stringify({ books: state.books, sessions: state.sessions });
+      var url = getApiUrl() + '?data=' + encodeURIComponent(payloadStr);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            if (cb) cb(true, '☁ 数据已成功同步上云！');
+          } else {
+            // GET 失败时尝试 POST 备用
+            pushCloudDataPost(cb);
+          }
+        }
+      };
+      xhr.send();
+    }
+
+    function pushCloudDataPost(cb) {
       var xhr = new XMLHttpRequest();
       xhr.open('POST', getApiUrl(), true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
-            if (cb) cb(true, '☁ 数据已成功上传同步到云端！');
+            if (cb) cb(true, '☁ 数据已成功同步上云！');
           } else {
-            if (cb) cb(false, '上传到云端失败，状态码: ' + xhr.status + ' (' + xhr.responseText + ')');
+            if (cb) cb(false, '上传到云端失败，状态码: ' + xhr.status);
           }
         }
       };
-      var payload = {
-        books: state.books,
-        sessions: state.sessions
-      };
-      xhr.send(JSON.stringify(payload));
+      xhr.send(JSON.stringify({ books: state.books, sessions: state.sessions }));
+    }
+
+    function exportSyncCode() {
+      var code = btoa(encodeURIComponent(JSON.stringify({ books: state.books, sessions: state.sessions })));
+      prompt('这是您的全量同步代码，复制后可在电脑端点击“导入代码”瞬间恢复：', code);
+    }
+
+    function importSyncCode() {
+      var code = prompt('请粘贴 Kindle 导出的同步代码：');
+      if (!code) return;
+      try {
+        var raw = decodeURIComponent(atob(code.replace(/^\s+|\s+$/g, '')));
+        var c = JSON.parse(raw);
+        mergeCloudAndLocal(c);
+        pushCloudData(null);
+        alert('🎉 成功导入 Kindle 数据！');
+      } catch(e) {
+        alert('同步代码格式错误，请检查后再试。');
+      }
     }
 
     function render() {
