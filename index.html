@@ -265,7 +265,7 @@
 <body>
 
   <!-- ==========================================================================
-       A. KINDLE 6寸屏极简视图 (默认加载，保障 100% 老旧 WebKit 兼容)
+       A. KINDLE 6寸屏极简视图
        ========================================================================== -->
   <div id="kindle-ui">
     <header>
@@ -292,7 +292,7 @@
 
     <!-- 计时面板卡片 -->
     <div class="card">
-      <div class="card-title">② 正在阅读</div>
+      <div class="card-title">② 正在阅读 (退出网页看书不影响计时间)</div>
       <div class="timer-box">
         <div class="timer-name" id="k-book-title-display">未选择图书</div>
         <div class="timer-val" id="k-timer-display">00:00:00</div>
@@ -303,6 +303,13 @@
         <button id="btn-pause" class="btn hidden" onclick="doPause()">⏸ 暂停</button>
       </div>
       <button id="btn-finish" class="btn hidden" onclick="doFinish()" style="margin-top: 6px;">⏹ 完成并保存本次阅读</button>
+    </div>
+
+    <!-- 云同步状态卡片 -->
+    <div class="card">
+      <div class="card-title">☁ 云端实时同步设置</div>
+      <div style="font-size: 12px; margin-bottom: 6px;" id="k-sync-status-text">状态：未绑定 GitHub Gist 云同步</div>
+      <button class="btn" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="openSyncPrompt()">⚙ 设置云同步 GitHub Token & Gist</button>
     </div>
 
     <!-- 成就看板卡片 -->
@@ -337,8 +344,10 @@
           <p style="font-size: 13px; color: #64748b; margin-top: 2px;">与 Kindle 墨水屏数据共享 | 历史记录修改与 CSV 导出</p>
         </div>
         <div>
-          <button class="pc-action-btn" onclick="exportCSVData()">📥 导出 CSV 报表</button>
-          <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
+          <button class="pc-action-btn" onclick="fetchCloudData()">🔄 手动拉取云端新数据</button>
+          <button class="pc-action-btn" style="background:#10b981; margin-left:6px;" onclick="openSyncPrompt()">⚙ 配置 GitHub Gist 云同步</button>
+          <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
+          <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
         </div>
       </div>
     </div>
@@ -389,7 +398,9 @@
     var state = {
       books: [],
       sessions: [],
-      activeId: null
+      activeId: null,
+      gistToken: '',
+      gistId: ''
     };
 
     var timer = {
@@ -400,18 +411,20 @@
       intervalId: null
     };
 
-    // 页面启动入口 (纯 ES5 方式)
     window.onload = function() {
       loadData();
       startClock();
       
-      // 检测 URL 是否显式要求 pc 模式
       if (window.location.href.indexOf('mode=pc') !== -1) {
         switchToPCMode();
       } else {
         switchToKindleMode();
       }
       render();
+
+      if (state.gistToken && state.gistId) {
+        fetchCloudData();
+      }
     };
 
     function startClock() {
@@ -429,17 +442,123 @@
 
     function loadData() {
       try {
-        var raw = localStorage.getItem('k_reading_v3');
+        var raw = localStorage.getItem('k_reading_v4');
         if (raw) {
           state = JSON.parse(raw);
         }
       } catch(e) {}
+      updateSyncStatusText();
     }
 
     function saveData() {
       try {
-        localStorage.setItem('k_reading_v3', JSON.stringify(state));
+        localStorage.setItem('k_reading_v4', JSON.stringify(state));
       } catch(e) {}
+      
+      if (state.gistToken && state.gistId) {
+        pushCloudData();
+      }
+    }
+
+    function updateSyncStatusText() {
+      var elem = document.getElementById('k-sync-status-text');
+      if (elem) {
+        if (state.gistToken && state.gistId) {
+          elem.innerHTML = '状态：<strong style="color:green;">☁ 已关联 GitHub Gist 云同步</strong>';
+        } else {
+          elem.innerHTML = '状态：未关联 GitHub Gist 云同步';
+        }
+      }
+    }
+
+    function openSyncPrompt() {
+      var t = prompt('请输入你的 GitHub Personal Access Token (只需勾选 gist 权限)：', state.gistToken || '');
+      if (t === null) return;
+      var g = prompt('请输入 GitHub Gist ID (已有填入，留空点击确定将自动为您创建全新 Gist)：', state.gistId || '');
+      if (g === null) return;
+
+      state.gistToken = t.replace(/^\s+|\s+$/g, '');
+      state.gistId = g.replace(/^\s+|\s+$/g, '');
+      saveData();
+      updateSyncStatusText();
+
+      if (state.gistToken && !state.gistId) {
+        autoCreateGist();
+      } else if (state.gistToken && state.gistId) {
+        fetchCloudData();
+      }
+    }
+
+    function autoCreateGist() {
+      if (!state.gistToken) return;
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://api.github.com/gists', true);
+      xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 201) {
+            var res = JSON.parse(xhr.responseText);
+            state.gistId = res.id;
+            saveData();
+            updateSyncStatusText();
+            alert('🎉 成功在云端自动创建专属数据 Gist！Gist ID: ' + res.id);
+            pushCloudData();
+          } else {
+            alert('创建云端 Gist 失败，请检查 Token 是否有效。');
+          }
+        }
+      };
+      var payload = {
+        description: 'Kindle Reading Tracker Cloud Sync Data',
+        public: false,
+        files: {
+          'kindle_reading_data.json': {
+            content: JSON.stringify({ books: state.books, sessions: state.sessions }, null, 2)
+          }
+        }
+      };
+      xhr.send(JSON.stringify(payload));
+    }
+
+    function fetchCloudData() {
+      if (!state.gistToken || !state.gistId) return;
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'https://api.github.com/gists/' + state.gistId, true);
+      xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          try {
+            var res = JSON.parse(xhr.responseText);
+            if (res.files && res.files['kindle_reading_data.json']) {
+              var c = JSON.parse(res.files['kindle_reading_data.json'].content);
+              if (c && c.books) {
+                state.books = c.books;
+                state.sessions = c.sessions || [];
+                localStorage.setItem('k_reading_v4', JSON.stringify(state));
+                render();
+              }
+            }
+          } catch(e) {}
+        }
+      };
+      xhr.send();
+    }
+
+    function pushCloudData() {
+      if (!state.gistToken || !state.gistId) return;
+      var xhr = new XMLHttpRequest();
+      xhr.open('PATCH', 'https://api.github.com/gists/' + state.gistId, true);
+      xhr.setRequestHeader('Authorization', 'token ' + state.gistToken);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      var payload = {
+        files: {
+          'kindle_reading_data.json': {
+            content: JSON.stringify({ books: state.books, sessions: state.sessions }, null, 2)
+          }
+        }
+      };
+      xhr.send(JSON.stringify(payload));
     }
 
     function render() {
@@ -513,7 +632,6 @@
       render();
     }
 
-    // 计时控制 (ES5 兼容)
     function doStart() {
       if (!state.activeId) {
         alert('请先选择或新建一本图书');
@@ -642,7 +760,6 @@
       if (compElem) compElem.innerHTML = completedCount + ' 本';
       if (sessElem) sessElem.innerHTML = state.sessions.length + ' 次';
 
-      // 渲染历史明细
       var tbody = document.getElementById('pc-history-tbody');
       if (tbody) {
         if (state.sessions.length === 0) {
@@ -669,7 +786,6 @@
         }
       }
 
-      // 渲染 PC 图书管理
       var pcBox = document.getElementById('pc-list-box');
       if (pcBox) {
         if (state.books.length === 0) {
