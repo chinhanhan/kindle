@@ -411,8 +411,25 @@
       intervalId: null
     };
 
+    function getQueryParam(name) {
+      var href = window.location.href;
+      var regex = new RegExp('[?&]' + name + '=([^&#]*)');
+      var results = regex.exec(href);
+      return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
     window.onload = function() {
       loadData();
+
+      // 支持 URL 参数一键自动绑定密钥与 Gist
+      var tokenParam = getQueryParam('token');
+      var gistParam = getQueryParam('gist');
+      if (tokenParam && gistParam) {
+        state.gistToken = tokenParam;
+        state.gistId = gistParam;
+        saveData();
+      }
+
       startClock();
       
       if (window.location.href.indexOf('mode=pc') !== -1) {
