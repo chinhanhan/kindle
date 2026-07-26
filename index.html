@@ -702,6 +702,8 @@
     var state = {
       books: [],
       sessions: [],
+      deletedBookIds: [],
+      deletedSessionIds: [],
       activeId: null
     };
 
@@ -756,6 +758,8 @@
         var raw = localStorage.getItem('k_reading_v4');
         if (raw) {
           state = JSON.parse(raw);
+          if (!state.deletedBookIds) state.deletedBookIds = [];
+          if (!state.deletedSessionIds) state.deletedSessionIds = [];
         }
       } catch(e) {}
     }
@@ -771,36 +775,52 @@
       if (!cloudData) return;
       var cloudBooks = cloudData.books || [];
       var cloudSessions = cloudData.sessions || [];
-      var hasChanges = false;
+      var cloudDelBooks = cloudData.deletedBookIds || [];
+      var cloudDelSessions = cloudData.deletedSessionIds || [];
+
+      if (!state.deletedBookIds) state.deletedBookIds = [];
+      if (!state.deletedSessionIds) state.deletedSessionIds = [];
+
+      // 1. 合并并构建 Tombstone 墓碑映射表 (已删除图书与记录 ID)
+      var delBookMap = {};
+      var mergedDelBooks = state.deletedBookIds.concat(cloudDelBooks);
+      for (var db = 0; db < mergedDelBooks.length; db++) {
+        if (mergedDelBooks[db]) delBookMap[mergedDelBooks[db]] = true;
+      }
+      state.deletedBookIds = Object.keys(delBookMap);
+
+      var delSessMap = {};
+      var mergedDelSessions = state.deletedSessionIds.concat(cloudDelSessions);
+      for (var ds = 0; ds < mergedDelSessions.length; ds++) {
+        if (mergedDelSessions[ds]) delSessMap[mergedDelSessions[ds]] = true;
+      }
+      state.deletedSessionIds = Object.keys(delSessMap);
 
       var bookMap = {};
       var mergedBooks = [];
 
-      // 1. 处理云端图书
+      // 2. 处理云端图书 (剔除墓碑名单中的图书)
       for (var i = 0; i < cloudBooks.length; i++) {
         var cb = cloudBooks[i];
-        if (!cb || cb.title === '测试书') continue;
+        if (!cb || cb.title === '测试书' || delBookMap[cb.id]) continue;
         bookMap[cb.id] = cb;
         if (cb.title) bookMap['t_' + cb.title] = cb;
       }
 
-      // 2. 融入本地图书（合并总用时与完成状态）
+      // 3. 融入本地图书 (剔除墓碑名单中的图书，合并总用时与完成状态)
       for (var j = 0; j < state.books.length; j++) {
         var lb = state.books[j];
-        if (!lb || lb.title === '测试书') continue;
+        if (!lb || lb.title === '测试书' || delBookMap[lb.id]) continue;
         var existing = bookMap[lb.id] || (lb.title ? bookMap['t_' + lb.title] : null);
         if (existing) {
           if ((lb.totalSec || 0) > (existing.totalSec || 0)) {
             existing.totalSec = lb.totalSec;
-            hasChanges = true;
           }
           if (lb.completed && !existing.completed) {
             existing.completed = true;
-            hasChanges = true;
           }
         } else {
           bookMap[lb.id] = lb;
-          hasChanges = true;
         }
       }
 
@@ -810,25 +830,23 @@
         }
       }
 
-      // 3. 融入打卡记录
+      // 4. 融入打卡记录 (剔除墓碑记录及已删图书的记录)
       var sessMap = {};
       var mergedSessions = [];
       var allSessions = cloudSessions.concat(state.sessions || []);
       for (var k = 0; k < allSessions.length; k++) {
         var s = allSessions[k];
-        if (s && s.id && !sessMap[s.id]) {
+        if (s && s.id && !delSessMap[s.id] && !delBookMap[s.bookId] && !sessMap[s.id]) {
           sessMap[s.id] = s;
           mergedSessions.push(s);
         }
       }
 
-      if (mergedSessions.length > cloudSessions.length) {
-        hasChanges = true;
-      }
-
       state.books = mergedBooks;
       state.sessions = mergedSessions;
-      if (!state.activeId && state.books.length > 0) {
+      if (state.activeId && delBookMap[state.activeId]) {
+        state.activeId = state.books.length > 0 ? state.books[0].id : null;
+      } else if (!state.activeId && state.books.length > 0) {
         state.activeId = state.books[0].id;
       }
 
@@ -840,11 +858,6 @@
       var pcStatusElem = document.getElementById('pc-sync-status-indicator');
       if (statusElem) statusElem.innerHTML = statusStr;
       if (pcStatusElem) pcStatusElem.innerHTML = statusStr;
-
-      // 如果本地有云端没有的新数据，自动反向同步到云端 Gist！
-      if (hasChanges) {
-        pushCloudData(null);
-      }
     }
 
     function fetchCloudData(showAlert) {
@@ -876,7 +889,12 @@
 
     /* Simple Request POST 使用 text/plain 彻底避开老 WebKit OPTIONS 预检阻断 */
     function pushCloudData(cb) {
-      var payloadObj = { books: state.books, sessions: state.sessions };
+      var payloadObj = {
+        books: state.books,
+        sessions: state.sessions,
+        deletedBookIds: state.deletedBookIds || [],
+        deletedSessionIds: state.deletedSessionIds || []
+      };
       var payloadStr = JSON.stringify(payloadObj);
 
       var xhr = new XMLHttpRequest();
@@ -913,13 +931,23 @@
     }
 
     function exportSyncCode() {
-      var code = btoa(encodeURIComponent(JSON.stringify({ books: state.books, sessions: state.sessions })));
+      var code = btoa(encodeURIComponent(JSON.stringify({
+        books: state.books,
+        sessions: state.sessions,
+        deletedBookIds: state.deletedBookIds || [],
+        deletedSessionIds: state.deletedSessionIds || []
+      })));
       prompt('这是您的全量同步代码，复制后可在电脑端点击“导入代码”瞬间恢复：', code);
     }
 
     function exportJSONData() {
       if (state.books.length === 0 && state.sessions.length === 0) return alert('暂无数据可导出备份');
-      var jsonStr = JSON.stringify({ books: state.books, sessions: state.sessions }, null, 2);
+      var jsonStr = JSON.stringify({
+        books: state.books,
+        sessions: state.sessions,
+        deletedBookIds: state.deletedBookIds || [],
+        deletedSessionIds: state.deletedSessionIds || []
+      }, null, 2);
       var blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
       var link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
@@ -1570,6 +1598,11 @@
 
     function deleteSession(sId) {
       if (!confirm('确定删除这条历史记录吗？')) return;
+      if (!state.deletedSessionIds) state.deletedSessionIds = [];
+      if (state.deletedSessionIds.indexOf(sId) === -1) {
+        state.deletedSessionIds.push(sId);
+      }
+
       var newSessions = [];
       for (var i = 0; i < state.sessions.length; i++) {
         var s = state.sessions[i];
@@ -1637,6 +1670,13 @@
 
     function deleteBook(bId) {
       if (!confirm('确定要删除这本书及其用时记录吗？')) return;
+      if (!state.deletedBookIds) state.deletedBookIds = [];
+      if (!state.deletedSessionIds) state.deletedSessionIds = [];
+
+      if (state.deletedBookIds.indexOf(bId) === -1) {
+        state.deletedBookIds.push(bId);
+      }
+
       var newBooks = [];
       for (var i = 0; i < state.books.length; i++) {
         if (state.books[i].id !== bId) {
@@ -1644,6 +1684,20 @@
         }
       }
       state.books = newBooks;
+
+      var newSessions = [];
+      for (var j = 0; j < state.sessions.length; j++) {
+        var s = state.sessions[j];
+        if (s.bookId === bId) {
+          if (state.deletedSessionIds.indexOf(s.id) === -1) {
+            state.deletedSessionIds.push(s.id);
+          }
+        } else {
+          newSessions.push(s);
+        }
+      }
+      state.sessions = newSessions;
+
       if (state.activeId === bId) state.activeId = null;
       saveData();
       render();

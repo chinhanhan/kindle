@@ -1,5 +1,5 @@
 // Vercel Serverless Function for Kindle ↔ PC Realtime Sync
-// Supports GET-based push & pull + POST to guarantee 100% failproof compatibility with legacy Kindle WebKit browsers.
+// Supports GET-based push & pull + POST with Tombstone deletion support for legacy Kindle WebKit browsers.
 
 const DEFAULT_GIST_ID = '9906213699cd129c2f8583c6a1b2fa7b';
 const part1 = 'ghp_4ss8CfnV9eXdYY9s';
@@ -19,12 +19,17 @@ export default async function handler(req, res) {
   const gistId = process.env.GIST_ID || DEFAULT_GIST_ID;
   const authHeader = 'token ' + token;
 
-  // Helper to update Gist content
-  async function patchGist(books, sessions) {
+  // Helper to update Gist content with tombstones
+  async function patchGist(books, sessions, deletedBookIds, deletedSessionIds) {
     const patchPayload = {
       files: {
         'kindle_reading_data.json': {
-          content: JSON.stringify({ books: books || [], sessions: sessions || [] }, null, 2)
+          content: JSON.stringify({
+            books: books || [],
+            sessions: sessions || [],
+            deletedBookIds: deletedBookIds || [],
+            deletedSessionIds: deletedSessionIds || []
+          }, null, 2)
         }
       }
     };
@@ -42,7 +47,7 @@ export default async function handler(req, res) {
     return response.ok;
   }
 
-  // 1. 如果是 GET 请求且带有 data 参数，直接将数据推送到云端 Gist (GET 避开老 Kindle 浏览器 POST 预检与限制)
+  // 1. 如果是 GET 请求且带有 data 参数，直接将数据推送到云端 Gist (GET 方式)
   if (req.method === 'GET' && req.query && req.query.data) {
     try {
       const rawData = decodeURIComponent(req.query.data);
@@ -53,7 +58,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid data query payload' });
       }
 
-      const ok = await patchGist(parsed.books, parsed.sessions);
+      const ok = await patchGist(parsed.books, parsed.sessions, parsed.deletedBookIds, parsed.deletedSessionIds);
       if (ok) {
         return res.status(200).json({ success: true, message: '数据已成功通过 GET 同步上云！' });
       } else {
@@ -82,10 +87,10 @@ export default async function handler(req, res) {
           const content = JSON.parse(data.files['kindle_reading_data.json'].content);
           return res.status(200).json(content);
         } catch(e) {
-          return res.status(200).json({ books: [], sessions: [] });
+          return res.status(200).json({ books: [], sessions: [], deletedBookIds: [], deletedSessionIds: [] });
         }
       }
-      return res.status(200).json({ books: [], sessions: [] });
+      return res.status(200).json({ books: [], sessions: [], deletedBookIds: [], deletedSessionIds: [] });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -102,7 +107,6 @@ export default async function handler(req, res) {
 
       if (!body || typeof body !== 'object' || !Array.isArray(body.books)) {
         if (body && typeof body === 'object') {
-          // 尝试拼接被 Vercel body-parser 拆分的 urlencoded key
           const rawKeys = Object.keys(body);
           if (rawKeys.length > 0) {
             var fullKeyStr = rawKeys.join('');
@@ -124,7 +128,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid payload, missing books array' });
       }
 
-      const ok = await patchGist(body.books, body.sessions);
+      const ok = await patchGist(body.books, body.sessions, body.deletedBookIds, body.deletedSessionIds);
       if (ok) {
         return res.status(200).json({ success: true, message: '数据已安全同步上云！' });
       } else {
