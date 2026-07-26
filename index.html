@@ -6,7 +6,7 @@
   <title>Kindle & PC 独立双端阅读成就看板</title>
   <style>
     /* ==========================================================================
-       1. 6寸 Kindle 墨水屏苹果 iOS 拟物大卡片风 (Apple Card UI - ES5 Optimized)
+       1. 6寸 Kindle 墨水屏包豪斯/斯堪的纳维亚极简风 (Scandinavian Bauhaus Style - ES5)
        ========================================================================== */
     * {
       box-sizing: border-box;
@@ -19,32 +19,30 @@
     body {
       background-color: #ffffff;
       color: #000000;
-      line-height: 1.4;
-      padding: 10px;
+      line-height: 1.5;
+      padding: 12px;
       max-width: 900px;
       margin: 0 auto;
     }
 
     header {
-      border-bottom: 3px solid #000000;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      border-bottom: 2px solid #000000;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .brand-title {
-      font-size: 18px;
-      font-weight: 900;
+    .serif-brand {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      font-weight: 800;
       letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .status-pill {
-      border: 2px solid #000000;
+      border: 1.5px solid #000000;
       padding: 3px 10px;
       font-size: 12px;
       font-weight: bold;
@@ -52,32 +50,28 @@
       background: #ffffff;
     }
 
-    /* iOS 拟物大卡片核心定义 */
-    .ios-card {
-      border: 3px solid #000000;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 14px;
-      background: #ffffff;
-      box-shadow: 0 4px 0 #000000;
+    /* 斯堪的纳维亚包豪斯去卡片化区域分隔 */
+    .bauhaus-section {
+      border-bottom: 1.5px solid #000000;
+      padding: 14px 0 18px 0;
+      margin-bottom: 8px;
     }
 
-    .card-title {
-      font-size: 14px;
+    .section-label {
+      font-size: 13px;
       font-weight: 800;
-      border-bottom: 1.5px dashed #000000;
-      padding-bottom: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      letter-spacing: 0.5px;
     }
 
-    .ios-select, input[type="text"] {
+    select, input[type="text"] {
       width: 100%;
       height: 48px;
-      border: 2.5px solid #000000;
-      border-radius: 10px;
+      border: 2px solid #000000;
+      border-radius: 4px;
       padding: 0 12px;
       font-size: 16px;
       font-weight: bold;
@@ -88,7 +82,7 @@
       -webkit-appearance: none;
     }
 
-    /* iOS 28px 胶囊触控大按钮 */
+    /* 包豪斯纯黑高对比度按键 */
     .btn {
       display: block;
       width: 100%;
@@ -96,8 +90,8 @@
       line-height: 50px;
       background: #ffffff;
       color: #000000;
-      border: 2.5px solid #000000;
-      border-radius: 28px;
+      border: 2px solid #000000;
+      border-radius: 6px;
       font-size: 17px;
       font-weight: 800;
       text-align: center;
@@ -105,14 +99,11 @@
       user-select: none;
       margin-bottom: 8px;
       text-decoration: none;
-      box-shadow: 0 2px 0 #000000;
     }
 
     .btn:active, .btn.active {
       background: #000000;
       color: #ffffff;
-      box-shadow: none;
-      transform: translateY(2px);
     }
 
     .btn-solid {
@@ -127,55 +118,56 @@
 
     .btn-group {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
 
     .btn-group .btn {
       flex: 1;
     }
 
-    /* 三合一主打卡焦点区 */
-    .focus-box {
+    /* 纸质书扉页核心打卡区 */
+    .hero-focus-box {
       text-align: center;
-      padding: 10px 0 4px 0;
+      padding: 16px 0 10px 0;
     }
 
-    .book-badge-name {
+    .book-title-badge {
       display: inline-block;
       border: 2px solid #000000;
-      border-radius: 8px;
-      padding: 5px 14px;
-      font-size: 17px;
+      border-radius: 4px;
+      padding: 6px 16px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
       font-weight: 800;
       background: #ffffff;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .timer-display {
-      font-size: 52px;
+      font-size: 58px;
       font-weight: 900;
       font-family: Courier, monospace, sans-serif;
       letter-spacing: 2px;
-      margin: 4px 0 10px 0;
+      margin: 6px 0 14px 0;
     }
 
     .stat-row {
       display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .stat-card {
       flex: 1;
       border: 2px solid #000000;
-      border-radius: 10px;
-      padding: 8px;
+      border-radius: 4px;
+      padding: 10px;
       text-align: center;
       background: #ffffff;
     }
 
     .stat-n {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 900;
     }
 
@@ -185,8 +177,8 @@
     }
 
     .book-line {
-      border-bottom: 1px solid #000000;
-      padding: 8px 0;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 10px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -194,8 +186,8 @@
     }
 
     .sm-btn {
-      border: 2px solid #000000;
-      border-radius: 16px;
+      border: 1.5px solid #000000;
+      border-radius: 4px;
       background: #ffffff;
       padding: 4px 10px;
       font-size: 12px;
@@ -350,22 +342,22 @@
 <body>
 
   <!-- ==========================================================================
-       A. KINDLE 6寸屏苹果 iOS 拟物大卡片双英雄视图 (Apple Card UI - ES5)
+       A. KINDLE 6寸屏包豪斯/斯堪的纳维亚极简纸质书风 (Scandinavian Bauhaus - ES5)
        ========================================================================== -->
   <div id="kindle-ui">
     <header>
-      <div class="brand-title">📖 Kindle 阅读计时器</div>
-      <div class="status-pill" id="k-clock" style="font-size:14px; font-weight:900;">08:34</div>
+      <div class="serif-brand">📖 Kindle 阅读计时器</div>
+      <div class="status-pill" id="k-clock" style="font-size:14px; font-weight:900;">00:00</div>
     </header>
 
-    <!-- 英雄卡片 1：图书选择与正在阅读专注控制区 -->
-    <div class="ios-card">
-      <div class="card-title">
+    <!-- ① 图书选择与核心计时区域 (无方框、大留白) -->
+    <div class="bauhaus-section">
+      <div class="section-label">
         <span>① 选择当前阅读图书</span>
         <span style="font-size:11px; font-weight:normal;">退出网页看书不影响计时间</span>
       </div>
 
-      <select id="k-select" class="ios-select" onchange="onSelectChange(this.value)">
+      <select id="k-select" onchange="onSelectChange(this.value)">
         <option value="">-- 点击选择阅读图书 --</option>
       </select>
 
@@ -376,11 +368,11 @@
           <button class="btn" onclick="toggleAddForm(false)">取消</button>
         </div>
       </div>
-      <button id="k-btn-show-add" class="btn" style="height:44px; line-height:40px; font-size:15px; border-radius:22px;" onclick="toggleAddForm(true)">➕ 添加新书</button>
+      <button id="k-btn-show-add" class="btn" style="height:44px; line-height:40px; font-size:15px;" onclick="toggleAddForm(true)">➕ 添加新书</button>
 
-      <!-- ② 正在阅读计时区 -->
-      <div class="focus-box">
-        <div class="book-badge-name" id="k-book-title-display">未选择图书</div>
+      <!-- ② 核心计时显示区 -->
+      <div class="hero-focus-box">
+        <div class="book-title-badge" id="k-book-title-display">未选择图书</div>
         <div class="timer-display" id="k-timer-display">00:00:00</div>
       </div>
 
@@ -391,20 +383,21 @@
       <button id="btn-finish" class="btn hidden" style="height:56px; font-size:18px; margin-top: 6px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
     </div>
 
-    <!-- 英雄卡片 2：无缝云端同步与累计成就明细 -->
-    <div class="ios-card">
-      <!-- ☁ 云端实时同步 -->
-      <div class="card-title">
+    <!-- ③ 云端实时同步区域 -->
+    <div class="bauhaus-section">
+      <div class="section-label">
         <span>☁ 无缝云端实时同步 (GET双向保底)</span>
       </div>
-      <div style="font-size: 12px; margin-bottom: 8px;" id="k-sync-status-text">状态：<strong style="color:green;">● 已开启全自动同源云同步</strong></div>
-      <div class="btn-group" style="margin-bottom: 14px;">
-        <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="manualPushCloud()">☁ 立即上传数据到云端</button>
-        <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="exportSyncCode()">📋 导出同步代码</button>
+      <div style="font-size: 12px; margin-bottom: 10px;" id="k-sync-status-text">状态：<strong style="color:green;">● 已开启全自动同源云同步</strong></div>
+      <div class="btn-group">
+        <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px;" onclick="manualPushCloud()">☁ 强制同步到云端</button>
+        <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px;" onclick="exportSyncCode()">📋 导出同步代码</button>
       </div>
+    </div>
 
-      <!-- 🏆 累计成就与单本明细 -->
-      <div class="card-title" style="margin-top: 6px;">
+    <!-- ④ 累计成就与单本明细列表区域 -->
+    <div class="bauhaus-section" style="border-bottom:none;">
+      <div class="section-label">
         <span>🏆 累计成就与单本明细</span>
       </div>
       <div class="stat-row">
