@@ -229,19 +229,19 @@
        2. PC 端高级可视化大屏专享样式 (PC Dashboard Mode)
        ========================================================================== */
     .pc-mode-container {
-      background: #f8fafc;
+      background: #0f172a;
       padding: 24px;
       min-height: 100vh;
-      color: #0f172a;
+      color: #f8fafc;
     }
 
     .pc-card-item {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
       margin-bottom: 20px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #334155;
     }
 
     .pc-grid-4 {
@@ -252,24 +252,24 @@
 
     .pc-stat-box {
       flex: 1;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      padding: 16px;
-      border-radius: 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 18px;
+      border-radius: 12px;
       text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     .pc-stat-num {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
-      color: #2563eb;
+      color: #38bdf8;
       margin-top: 4px;
     }
 
     .pc-stat-label {
       font-size: 13px;
-      color: #64748b;
+      color: #94a3b8;
       font-weight: 600;
     }
 
@@ -287,11 +287,28 @@
     .pc-chart-header {
       font-size: 15px;
       font-weight: 700;
-      margin-bottom: 12px;
-      color: #1e293b;
+      margin-bottom: 14px;
+      color: #f8fafc;
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .filter-pill {
+      background: #334155;
+      color: #94a3b8;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .filter-pill.active {
+      background: #38bdf8;
+      color: #0f172a;
     }
 
     .heatmap-scroll-box {
@@ -314,13 +331,13 @@
       width: 11px;
       height: 11px;
       border-radius: 2px;
-      background-color: #ebedf0;
+      background-color: #334155;
     }
 
-    .heatmap-cell.lvl-1 { background-color: #9be9a8; }
-    .heatmap-cell.lvl-2 { background-color: #40c463; }
-    .heatmap-cell.lvl-3 { background-color: #30a14e; }
-    .heatmap-cell.lvl-4 { background-color: #216e39; }
+    .heatmap-cell.lvl-1 { background-color: #0e4429; }
+    .heatmap-cell.lvl-2 { background-color: #006d32; }
+    .heatmap-cell.lvl-3 { background-color: #26a641; }
+    .heatmap-cell.lvl-4 { background-color: #39d353; }
 
     table.pc-table {
       width: 100%;
@@ -332,17 +349,17 @@
     table.pc-table th, table.pc-table td {
       padding: 10px 12px;
       text-align: left;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid #334155;
     }
 
     table.pc-table th {
-      background: #f8fafc;
-      color: #475569;
+      background: #0f172a;
+      color: #94a3b8;
       font-weight: 600;
     }
 
     .pc-action-btn {
-      background: #2563eb;
+      background: #0284c7;
       color: #fff;
       border: none;
       padding: 8px 14px;
@@ -353,13 +370,36 @@
       transition: background 0.2s;
     }
 
-    .pc-action-btn:hover { background: #1d4ed8; }
+    .pc-action-btn:hover { background: #0369a1; }
     .pc-btn-red { background: #ef4444; }
     .pc-btn-red:hover { background: #dc2626; }
     .pc-btn-purple { background: #8b5cf6; }
     .pc-btn-purple:hover { background: #7c3aed; }
     .pc-btn-green { background: #10b981; }
     .pc-btn-green:hover { background: #059669; }
+    .pc-btn-orange { background: #f59e0b; }
+    .pc-btn-orange:hover { background: #d97706; }
+
+    /* 单本剖析 Modal 弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 14px;
+      padding: 24px;
+      width: 500px;
+      max-width: 90%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -462,21 +502,23 @@
     <div class="pc-card-item">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <h2 style="font-size: 22px; font-weight: 800; color: #0f172a;">📊 个人阅读数据可视化大屏 (PC 管理端)</h2>
-          <p style="font-size: 13px; color: #64748b; margin-top: 3px;">全自动同步 Kindle 墨水屏数据 | 硬盘 JSON 备份与 CSV 导出</p>
+          <h2 style="font-size: 22px; font-weight: 800; color: #f8fafc;">📊 个人阅读数据可视化大屏 (PC 暗黑管理端)</h2>
+          <p style="font-size: 13px; color: #94a3b8; margin-top: 3px;">全自动同步 Kindle 墨水屏数据 | 海报生成 | 动态时间筛选 | 图书深度剖析</p>
         </div>
         <div>
-          <button class="pc-action-btn" onclick="fetchCloudData(true)">🔄 手动拉取云端数据</button>
+          <button class="pc-action-btn pc-btn-orange" onclick="generatePoster()">🖼️ 生成阅读成就海报</button>
+          <button class="pc-action-btn" style="margin-left:6px;" onclick="fetchCloudData(true)">🔄 手动拉取云端数据</button>
           <button class="pc-action-btn pc-btn-green" style="margin-left:6px;" onclick="exportJSONData()">💾 导出 JSON 磁盘备份</button>
           <button class="pc-action-btn pc-btn-purple" style="margin-left:6px;" onclick="triggerJSONImport()">📤 恢复 JSON 备份文件</button>
-          <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
-          <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
+          <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
+          <button class="pc-action-btn" style="background:#334155; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
         </div>
       </div>
     </div>
 
-    <!-- 隐藏的 JSON 文件选择器 -->
+    <!-- 隐藏的 JSON 文件选择器 & 海报绘制 Canvas -->
     <input type="file" id="pc-json-file-input" accept=".json" style="display:none;" onchange="handleJSONFileSelect(event)">
+    <canvas id="poster-canvas" width="800" height="1100" style="display:none;"></canvas>
 
     <!-- 顶栏 4 大数据统计卡片 -->
     <div class="pc-grid-4">
@@ -490,7 +532,7 @@
       </div>
       <div class="pc-stat-box">
         <div class="pc-stat-label">已读完图书数量</div>
-        <div class="pc-stat-num" id="pc-stat-completed" style="color:#8b5cf6;">0 本</div>
+        <div class="pc-stat-num" id="pc-stat-completed" style="color:#a855f7;">0 本</div>
       </div>
       <div class="pc-stat-box">
         <div class="pc-stat-label">总打卡记录次数</div>
@@ -502,19 +544,24 @@
     <div class="pc-card-item">
       <div class="pc-chart-header">
         <span>🟩 年度阅读打卡热力图 (GitHub Style)</span>
-        <span style="font-size: 12px; font-weight: normal; color: #64748b;">浅绿 ➔ 深绿 代表当日阅读时长增加</span>
+        <span style="font-size: 12px; font-weight: normal; color: #94a3b8;">浅绿 ➔ 深绿 代表当日阅读时长增加</span>
       </div>
       <div class="heatmap-scroll-box">
         <div class="heatmap-grid" id="pc-heatmap-container"></div>
       </div>
     </div>
 
-    <!-- 柱状图 & 趋势折线图 网格 -->
+    <!-- 柱状图 & 趋势折线图 网格（带 7天/30天/全量 动态时间筛选器） -->
     <div class="pc-grid-2">
-      <!-- 柱状图：本周/本月每日阅读时长 -->
+      <!-- 柱状图：每日阅读时长 -->
       <div class="pc-card-item">
         <div class="pc-chart-header">
-          <span>📊 最近 7 天每日阅读时长 (分钟)</span>
+          <span>📊 每日阅读时长分析 (分钟)</span>
+          <div>
+            <button id="pill-7" class="filter-pill active" onclick="setChartTimeRange(7)">最近7天</button>
+            <button id="pill-30" class="filter-pill" onclick="setChartTimeRange(30)">最近30天</button>
+            <button id="pill-all" class="filter-pill" onclick="setChartTimeRange(0)">全量历史</button>
+          </div>
         </div>
         <div style="height: 220px; position: relative;">
           <canvas id="pc-bar-canvas" width="400" height="220" style="width: 100%; height: 100%;"></canvas>
@@ -536,8 +583,8 @@
     <div class="pc-grid-2">
       <!-- 历史记录表格 -->
       <div class="pc-card-item">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-          <strong style="font-size:15px;">📝 历史阅读明细记录</strong>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px;">
+          <strong style="font-size:15px; color:#f8fafc;">📝 历史阅读明细记录</strong>
           <button class="pc-action-btn" onclick="doManualAddSession()">➕ 手动补录一次阅读</button>
         </div>
         <table class="pc-table">
@@ -558,12 +605,38 @@
       <!-- 全部图书管理列表 -->
       <div class="pc-card-item">
         <div class="pc-chart-header">
-          <span>📚 全部图书管理列表</span>
+          <span>📚 全部图书管理列表 (点击图书名可打开深度分析)</span>
         </div>
         <div id="pc-list-box"></div>
       </div>
     </div>
 
+  </div>
+
+  <!-- 单本图书深度剖析 Modal 弹窗 -->
+  <div id="book-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px; margin-bottom:16px;">
+        <h3 id="modal-book-title" style="font-size:18px; color:#f8fafc;">《图书名称》深度剖析</h3>
+        <button class="pc-action-btn pc-btn-red" style="padding:2px 8px;" onclick="closeBookModal()">✕ 关闭</button>
+      </div>
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <div style="flex:1; background:#0f172a; padding:12px; border-radius:8px; text-align:center;">
+          <div style="font-size:11px; color:#94a3b8;">累计阅读时长</div>
+          <div id="modal-book-total" style="font-size:20px; font-weight:800; color:#38bdf8;">0分</div>
+        </div>
+        <div style="flex:1; background:#0f172a; padding:12px; border-radius:8px; text-align:center;">
+          <div style="font-size:11px; color:#94a3b8;">平均每次用时</div>
+          <div id="modal-book-avg" style="font-size:20px; font-weight:800; color:#10b981;">0分</div>
+        </div>
+        <div style="flex:1; background:#0f172a; padding:12px; border-radius:8px; text-align:center;">
+          <div style="font-size:11px; color:#94a3b8;">打卡总次数</div>
+          <div id="modal-book-count" style="font-size:20px; font-weight:800; color:#a855f7;">0次</div>
+        </div>
+      </div>
+      <div style="font-size:13px; font-weight:700; color:#94a3b8; margin-bottom:8px;">📅 该图书打卡日志明细：</div>
+      <div id="modal-book-logs" style="max-height:200px; overflow-y:auto; font-size:12px; color:#cbd5e1; border:1px solid #334155; border-radius:6px; padding:8px;"></div>
+    </div>
   </div>
 
   <!-- ES5 纯原生 JavaScript 脚本 (100% 兼容老版本 Kindle WebKit 引擎) -->
@@ -581,6 +654,8 @@
       elapsedSec: 0,
       intervalId: null
     };
+
+    var currentRangeDays = 7;
 
     function getApiUrl() {
       var origin = window.location.protocol + '//' + window.location.host;
@@ -972,8 +1047,16 @@
     }
 
     /* ==========================================================================
-       3. PC 端可视化图表手绘渲染引擎 (GitHub 热力图 + 柱状图 + 饼图 + Streak)
+       3. PC 端可视化图表手绘渲染引擎 (GitHub 热力图 + 柱状图 + 饼图 + Streak + 海报)
        ========================================================================== */
+    function setChartTimeRange(days) {
+      currentRangeDays = days;
+      document.getElementById('pill-7').className = days === 7 ? 'filter-pill active' : 'filter-pill';
+      document.getElementById('pill-30').className = days === 30 ? 'filter-pill active' : 'filter-pill';
+      document.getElementById('pill-all').className = days === 0 ? 'filter-pill active' : 'filter-pill';
+      renderBarChart();
+    }
+
     function renderPCDashboard() {
       var totalSec = 0;
       var completedCount = 0;
@@ -1013,7 +1096,7 @@
             }
             hHtml += '<tr>' +
                        '<td>' + new Date(s.time).toLocaleString() + '</td>' +
-                       '<td><strong>《' + escapeStr(bTitle) + '》</strong></td>' +
+                       '<td><strong style="cursor:pointer; text-decoration:underline;" onclick="openBookDetailModal(\'' + s.bookId + '\')">《' + escapeStr(bTitle) + '》</strong></td>' +
                        '<td>' + formatMin(s.sec) + '</td>' +
                        '<td><button class="pc-action-btn pc-btn-red" style="padding:2px 8px;" onclick="deleteSession(\'' + s.id + '\')">删除</button></td>' +
                      '</tr>';
@@ -1030,8 +1113,8 @@
           var pcHtml = '';
           for (var n = 0; n < state.books.length; n++) {
             var bItem = state.books[n];
-            pcHtml += '<div style="border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between; align-items:center;">' +
-                        '<div><strong>《' + escapeStr(bItem.title) + '》</strong> <span style="font-size:12px; color:#64748b;">(累计 ' + formatMin(bItem.totalSec) + ')</span></div>' +
+            pcHtml += '<div style="border-bottom:1px solid #334155; padding:8px 0; display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div><strong style="cursor:pointer; color:#38bdf8; text-decoration:underline;" onclick="openBookDetailModal(\'' + bItem.id + '\')">《' + escapeStr(bItem.title) + '》</strong> <span style="font-size:12px; color:#94a3b8;">(累计 ' + formatMin(bItem.totalSec) + ')</span></div>' +
                         '<div>' +
                           '<button class="pc-action-btn" style="padding:3px 8px;" onclick="toggleComplete(\'' + bItem.id + '\')">' + (bItem.completed ? '取消读完' : '标记读完') + '</button> ' +
                           '<button class="pc-action-btn pc-btn-red" style="padding:3px 8px;" onclick="deleteBook(\'' + bItem.id + '\')">删除图书</button>' +
@@ -1041,6 +1124,41 @@
           pcBox.innerHTML = pcHtml;
         }
       }
+    }
+
+    function openBookDetailModal(bId) {
+      var book = getBookById(bId);
+      if (!book) return;
+      document.getElementById('modal-book-title').innerHTML = '《' + escapeStr(book.title) + '》 深度剖析';
+      document.getElementById('modal-book-total').innerHTML = formatMin(book.totalSec);
+
+      var logs = [];
+      var count = 0;
+      for (var i = 0; i < state.sessions.length; i++) {
+        if (state.sessions[i].bookId === bId) {
+          count++;
+          logs.push(state.sessions[i]);
+        }
+      }
+
+      document.getElementById('modal-book-count').innerHTML = count + '次';
+      var avgSec = count > 0 ? Math.floor(book.totalSec / count) : 0;
+      document.getElementById('modal-book-avg').innerHTML = formatMin(avgSec);
+
+      var lHtml = '';
+      if (logs.length === 0) {
+        lHtml = '<div style="text-align:center; color:#94a3b8; padding:8px;">暂无打卡日志</div>';
+      } else {
+        for (var j = logs.length - 1; j >= 0; j--) {
+          lHtml += '<div style="padding:4px 0; border-bottom:1px solid #1e293b;">📅 ' + new Date(logs[j].time).toLocaleString() + ' — 阅读 <strong>' + formatMin(logs[j].sec) + '</strong></div>';
+        }
+      }
+      document.getElementById('modal-book-logs').innerHTML = lHtml;
+      document.getElementById('book-modal').className = 'modal-overlay';
+    }
+
+    function closeBookModal() {
+      document.getElementById('book-modal').className = 'modal-overlay hidden';
     }
 
     function calculateStreak() {
@@ -1115,9 +1233,10 @@
       var h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
+      var numDays = currentRangeDays === 0 ? 30 : currentRangeDays;
       var days = [];
       var dayMap = {};
-      for (var i = 6; i >= 0; i--) {
+      for (var i = numDays - 1; i >= 0; i--) {
         var d = new Date();
         d.setDate(d.getDate() - i);
         var label = (d.getMonth() + 1) + '/' + d.getDate();
@@ -1139,8 +1258,8 @@
       }
 
       var padding = 30;
-      var barW = 32;
-      var gap = (w - padding * 2 - barW * 7) / 6;
+      var barW = numDays > 14 ? 8 : 32;
+      var gap = (w - padding * 2 - barW * numDays) / (numDays - 1 || 1);
 
       for (var idx = 0; idx < days.length; idx++) {
         var val = dayMap[days[idx].key] || 0;
@@ -1148,19 +1267,21 @@
         var x = padding + idx * (barW + gap);
         var y = h - padding - barH;
 
-        ctx.fillStyle = '#3b82f6';
+        ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
         ctx.rect(x, y, barW, barH);
         ctx.fill();
 
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(val + 'm', x + barW / 2, y - 6);
+        if (numDays <= 10) {
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(val + 'm', x + barW / 2, y - 6);
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = '11px sans-serif';
-        ctx.fillText(days[idx].label, x + barW / 2, h - 8);
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '11px sans-serif';
+          ctx.fillText(days[idx].label, x + barW / 2, h - 8);
+        }
       }
     }
 
@@ -1193,7 +1314,7 @@
         return;
       }
 
-      var colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
+      var colors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#ec4899', '#64748b'];
       var cx = 110;
       var cy = h / 2;
       var r = 75;
@@ -1217,7 +1338,7 @@
         ctx.fillStyle = colors[j % colors.length];
         ctx.fillRect(legX, legY, 14, 14);
 
-        ctx.fillStyle = '#1e293b';
+        ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'left';
         var pct = ((bk.totalSec / totalSec) * 100).toFixed(1) + '%';
@@ -1225,6 +1346,102 @@
 
         startAngle = endAngle;
       }
+    }
+
+    /* 生成高清阅读成就分享海报 */
+    function generatePoster() {
+      var canvas = document.getElementById('poster-canvas');
+      if (!canvas || !canvas.getContext) return;
+      var ctx = canvas.getContext('2d');
+      var w = canvas.width;
+      var h = canvas.height;
+
+      // 1. 深邃暗黑背景
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, w, h);
+
+      // 2. 顶部金色勋章边框卡片
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(40, 40, w - 80, h - 80, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      // 3. 标题与名言
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('📖 个人阅读成就里程碑', w / 2, 110);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'italic 18px serif';
+      ctx.fillText('“读书破万卷，下笔如有神”', w / 2, 150);
+
+      // 4. 统计核心指标 3 连框
+      var totalSec = 0;
+      for (var i = 0; i < state.books.length; i++) {
+        totalSec += (state.books[i].totalSec || 0);
+      }
+      var totalHours = (totalSec / 3600).toFixed(1);
+      var streak = calculateStreak();
+
+      // 累计时长框
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(80, 190, 200, 100);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.fillText('累计阅读时长', 180, 220);
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(totalHours + ' 小时', 180, 265);
+
+      // 连续天数框
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(300, 190, 200, 100);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.fillText('连续打卡天数', 400, 220);
+      ctx.fillStyle = '#10b981'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(streak + ' 天', 400, 265);
+
+      // 累计图书框
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(520, 190, 200, 100);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.fillText('累计图书书单', 620, 220);
+      ctx.fillStyle = '#a855f7'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(state.books.length + ' 本', 620, 265);
+
+      // 5. 阅读书单 Top 列表
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('📚 精选阅读书单成就：', 80, 340);
+
+      var yPos = 380;
+      for (var b = 0; b < Math.min(state.books.length, 6); b++) {
+        var bk = state.books[b];
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(80, yPos, w - 160, 50);
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText((bk.completed ? '✔ ' : '📖 ') + '《' + escapeStr(bk.title) + '》', 100, yPos + 32);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'right';
+        ctx.fillText('用时 ' + formatMin(bk.totalSec), w - 100, yPos + 32);
+        ctx.textAlign = 'left';
+
+        yPos += 62;
+      }
+
+      // 6. 底部二元码签名
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      var dStr = new Date().toLocaleDateString();
+      ctx.fillText('Kindle & PC 自动同步阅读大屏 | 签发日期: ' + dStr, w / 2, h - 80);
+
+      // 下载生成 PNG 图片
+      var link = document.createElement('a');
+      link.download = 'Kindle_Reading_Achievement_Poster.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      alert('🖼️ 个人阅读成就海报生成完成，已自动下载！');
     }
 
     function deleteSession(sId) {
