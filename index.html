@@ -6,72 +6,93 @@
   <title>Kindle & PC 独立双端阅读成就看板</title>
   <style>
     /* ==========================================================================
-       1. 6寸 Kindle 墨水屏包豪斯/斯堪的纳维亚极简风 (Scandinavian Bauhaus Style - ES5)
+       1. 6寸 Kindle 墨水屏 macOS 应用程序窗口风 (macOS App Window UI - ES5)
        ========================================================================== */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
       background-color: #ffffff;
       color: #000000;
-      line-height: 1.5;
-      padding: 12px;
+      line-height: 1.4;
+      padding: 10px;
       max-width: 900px;
       margin: 0 auto;
     }
 
-    header {
-      border-bottom: 2px solid #000000;
-      padding-bottom: 10px;
+    /* macOS 统一桌面应用窗口框架 */
+    .macos-window {
+      border: 3px solid #000000;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 5px 0 #000000;
+      overflow: hidden;
       margin-bottom: 14px;
+    }
+
+    /* macOS 标志性窗口标题栏 */
+    .macos-titlebar {
+      border-bottom: 2.5px solid #000000;
+      padding: 10px 14px;
+      background: #ffffff;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .serif-brand {
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 19px;
+    .macos-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 1.5px solid #000000;
+      display: inline-block;
+    }
+
+    .dot-close { background: #000000; }
+    .dot-min { background: #ffffff; }
+    .dot-max { background: #ffffff; }
+
+    .macos-title-text {
+      font-size: 14px;
       font-weight: 800;
       letter-spacing: 0.5px;
     }
 
-    .status-pill {
-      border: 1.5px solid #000000;
-      padding: 3px 10px;
-      font-size: 12px;
-      font-weight: bold;
-      border-radius: 20px;
-      background: #ffffff;
+    .macos-body {
+      padding: 14px;
     }
 
-    /* 斯堪的纳维亚包豪斯去卡片化区域分隔 */
-    .bauhaus-section {
-      border-bottom: 1.5px solid #000000;
-      padding: 14px 0 18px 0;
-      margin-bottom: 8px;
+    .section-divider {
+      border-bottom: 1.5px dashed #000000;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .section-label {
       font-size: 13px;
       font-weight: 800;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      letter-spacing: 0.5px;
     }
 
     select, input[type="text"] {
       width: 100%;
       height: 48px;
       border: 2px solid #000000;
-      border-radius: 4px;
+      border-radius: 8px;
       padding: 0 12px;
       font-size: 16px;
       font-weight: bold;
@@ -82,7 +103,7 @@
       -webkit-appearance: none;
     }
 
-    /* 包豪斯纯黑高对比度按键 */
+    /* macOS 胶囊粗体大按钮 */
     .btn {
       display: block;
       width: 100%;
@@ -90,8 +111,8 @@
       line-height: 50px;
       background: #ffffff;
       color: #000000;
-      border: 2px solid #000000;
-      border-radius: 6px;
+      border: 2.5px solid #000000;
+      border-radius: 27px;
       font-size: 17px;
       font-weight: 800;
       text-align: center;
@@ -99,11 +120,14 @@
       user-select: none;
       margin-bottom: 8px;
       text-decoration: none;
+      box-shadow: 0 2px 0 #000000;
     }
 
     .btn:active, .btn.active {
       background: #000000;
       color: #ffffff;
+      box-shadow: none;
+      transform: translateY(2px);
     }
 
     .btn-solid {
@@ -118,56 +142,55 @@
 
     .btn-group {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .btn-group .btn {
       flex: 1;
     }
 
-    /* 纸质书扉页核心打卡区 */
-    .hero-focus-box {
+    /* 窗口核心打卡区 */
+    .focus-box {
       text-align: center;
-      padding: 16px 0 10px 0;
+      padding: 12px 0 6px 0;
     }
 
-    .book-title-badge {
+    .book-badge-name {
       display: inline-block;
       border: 2px solid #000000;
-      border-radius: 4px;
-      padding: 6px 16px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 18px;
+      border-radius: 6px;
+      padding: 4px 14px;
+      font-size: 16px;
       font-weight: 800;
       background: #ffffff;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .timer-display {
-      font-size: 58px;
+      font-size: 56px;
       font-weight: 900;
       font-family: Courier, monospace, sans-serif;
       letter-spacing: 2px;
-      margin: 6px 0 14px 0;
+      margin: 4px 0 12px 0;
     }
 
     .stat-row {
       display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     .stat-card {
       flex: 1;
       border: 2px solid #000000;
-      border-radius: 4px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 8px;
       text-align: center;
       background: #ffffff;
     }
 
     .stat-n {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 900;
     }
 
@@ -177,8 +200,8 @@
     }
 
     .book-line {
-      border-bottom: 1px solid #e5e5e5;
-      padding: 10px 0;
+      border-bottom: 1px solid #000000;
+      padding: 8px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -186,8 +209,8 @@
     }
 
     .sm-btn {
-      border: 1.5px solid #000000;
-      border-radius: 4px;
+      border: 2px solid #000000;
+      border-radius: 14px;
       background: #ffffff;
       padding: 4px 10px;
       font-size: 12px;
@@ -342,78 +365,91 @@
 <body>
 
   <!-- ==========================================================================
-       A. KINDLE 6寸屏包豪斯/斯堪的纳维亚极简纸质书风 (Scandinavian Bauhaus - ES5)
+       A. KINDLE 6寸屏 macOS 应用程序窗口视图 (macOS App Window UI - ES5)
        ========================================================================== -->
   <div id="kindle-ui">
-    <header>
-      <div class="serif-brand">📖 Kindle 阅读计时器</div>
-      <div class="status-pill" id="k-clock" style="font-size:14px; font-weight:900;">00:00</div>
-    </header>
-
-    <!-- ① 图书选择与核心计时区域 (无方框、大留白) -->
-    <div class="bauhaus-section">
-      <div class="section-label">
-        <span>① 选择当前阅读图书</span>
-        <span style="font-size:11px; font-weight:normal;">退出网页看书不影响计时间</span>
+    
+    <!-- 单一精美 macOS 软件窗口框架 (Kindle Tracker.app) -->
+    <div class="macos-window">
+      <!-- 窗口 Header：控制圆点 + 软件名称 + 实时时钟 -->
+      <div class="macos-titlebar">
+        <div class="macos-dots">
+          <span class="dot dot-close"></span>
+          <span class="dot dot-min"></span>
+          <span class="dot dot-max"></span>
+        </div>
+        <div class="macos-title-text">📖 Kindle Reading Tracker.app</div>
+        <div id="k-clock" style="font-weight:900; font-size:13px;">00:00</div>
       </div>
 
-      <select id="k-select" onchange="onSelectChange(this.value)">
-        <option value="">-- 点击选择阅读图书 --</option>
-      </select>
+      <!-- 窗口 Body：核心阅读打卡与云同步 -->
+      <div class="macos-body">
+        
+        <!-- ① 选择当前阅读图书 -->
+        <div class="section-label">
+          <span>① 选择当前阅读图书</span>
+          <span style="font-size:11px; font-weight:normal;">退出网页看书不影响计时间</span>
+        </div>
 
-      <div id="k-add-form" class="hidden">
-        <input type="text" id="k-input-title" placeholder="输入书名，如《三体》">
+        <select id="k-select" onchange="onSelectChange(this.value)">
+          <option value="">-- 点击选择阅读图书 --</option>
+        </select>
+
+        <div id="k-add-form" class="hidden">
+          <input type="text" id="k-input-title" placeholder="输入书名，如《三体》">
+          <div class="btn-group">
+            <button class="btn btn-solid" onclick="doAddBook()">确认添加</button>
+            <button class="btn" onclick="toggleAddForm(false)">取消</button>
+          </div>
+        </div>
+        <button id="k-btn-show-add" class="btn" style="height:44px; line-height:40px; font-size:15px; border-radius:22px;" onclick="toggleAddForm(true)">➕ 添加新书</button>
+
+        <!-- ② 正在阅读计时控制区 -->
+        <div class="focus-box">
+          <div class="book-badge-name" id="k-book-title-display">未选择图书</div>
+          <div class="timer-display" id="k-timer-display">00:00:00</div>
+        </div>
+
         <div class="btn-group">
-          <button class="btn btn-solid" onclick="doAddBook()">确认添加</button>
-          <button class="btn" onclick="toggleAddForm(false)">取消</button>
+          <button id="btn-start" class="btn btn-solid" style="height:56px; font-size:18px;" onclick="doStart()">▶ 开始阅读</button>
+          <button id="btn-pause" class="btn hidden" style="height:56px; font-size:18px;" onclick="doPause()">⏸ 暂停</button>
         </div>
-      </div>
-      <button id="k-btn-show-add" class="btn" style="height:44px; line-height:40px; font-size:15px;" onclick="toggleAddForm(true)">➕ 添加新书</button>
+        <button id="btn-finish" class="btn hidden" style="height:56px; font-size:18px; margin-top: 6px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
 
-      <!-- ② 核心计时显示区 -->
-      <div class="hero-focus-box">
-        <div class="book-title-badge" id="k-book-title-display">未选择图书</div>
-        <div class="timer-display" id="k-timer-display">00:00:00</div>
-      </div>
+        <div class="section-divider" style="margin-top: 14px;"></div>
 
-      <div class="btn-group">
-        <button id="btn-start" class="btn btn-solid" style="height:56px; font-size:18px;" onclick="doStart()">▶ 开始阅读</button>
-        <button id="btn-pause" class="btn hidden" style="height:56px; font-size:18px;" onclick="doPause()">⏸ 暂停</button>
+        <!-- ③ 云端实时同步 -->
+        <div class="section-label">
+          <span>☁ 无缝云端实时同步 (GET双向保底)</span>
+        </div>
+        <div style="font-size: 12px; margin-bottom: 8px;" id="k-sync-status-text">状态：<strong style="color:green;">● 已开启全自动同源云同步</strong></div>
+        <div class="btn-group">
+          <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="manualPushCloud()">☁ 强制同步到云端</button>
+          <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="exportSyncCode()">📋 导出同步代码</button>
+        </div>
+
+        <div class="section-divider" style="margin-top: 14px;"></div>
+
+        <!-- ④ 累计成就与单本明细列表 -->
+        <div class="section-label">
+          <span>🏆 累计成就与单本明细</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-l">总阅读时长</div>
+            <div class="stat-n" id="k-stat-total">0分</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-l">累计图书</div>
+            <div class="stat-n" id="k-stat-count">0本</div>
+          </div>
+        </div>
+        <div id="k-list-box"></div>
+
       </div>
-      <button id="btn-finish" class="btn hidden" style="height:56px; font-size:18px; margin-top: 6px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
     </div>
 
-    <!-- ③ 云端实时同步区域 -->
-    <div class="bauhaus-section">
-      <div class="section-label">
-        <span>☁ 无缝云端实时同步 (GET双向保底)</span>
-      </div>
-      <div style="font-size: 12px; margin-bottom: 10px;" id="k-sync-status-text">状态：<strong style="color:green;">● 已开启全自动同源云同步</strong></div>
-      <div class="btn-group">
-        <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px;" onclick="manualPushCloud()">☁ 强制同步到云端</button>
-        <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px;" onclick="exportSyncCode()">📋 导出同步代码</button>
-      </div>
-    </div>
-
-    <!-- ④ 累计成就与单本明细列表区域 -->
-    <div class="bauhaus-section" style="border-bottom:none;">
-      <div class="section-label">
-        <span>🏆 累计成就与单本明细</span>
-      </div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-l">总阅读时长</div>
-          <div class="stat-n" id="k-stat-total">0分</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-l">累计图书</div>
-          <div class="stat-n" id="k-stat-count">0本</div>
-        </div>
-      </div>
-      <div id="k-list-box"></div>
-    </div>
-
-    <div style="text-align: center; margin-top: 15px; font-size: 12px; padding-bottom: 20px;">
+    <div style="text-align: center; margin-top: 10px; font-size: 12px; padding-bottom: 20px;">
       <a href="javascript:void(0)" onclick="switchToPCMode()" style="color: #000; text-decoration: underline; font-weight: bold;">切换至电脑大屏管理模式 ↗</a>
     </div>
   </div>
