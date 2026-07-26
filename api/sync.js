@@ -91,13 +91,26 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3. POST: 兼容常规客户端及老版本 Kindle WebKit 提交
+  // 3. POST: 兼容常规客户端、表单提交及老版本 Kindle WebKit
   if (req.method === 'POST') {
     try {
       let body = req.body;
+
+      // Handle raw string body
       if (typeof body === 'string') {
         try { body = JSON.parse(body); } catch(e) {}
       }
+
+      // Handle Vercel body-parser urlencoded key fallback (where raw JSON string becomes object key)
+      if (body && !Array.isArray(body.books)) {
+        const keys = Object.keys(body);
+        if (keys.length > 0 && (keys[0].indexOf('{') === 0 || keys[0].indexOf('{"') === 0)) {
+          try {
+            body = JSON.parse(keys[0]);
+          } catch(e) {}
+        }
+      }
+
       if (body && typeof body.data === 'string') {
         try { body = JSON.parse(body.data); } catch(e) {}
       }

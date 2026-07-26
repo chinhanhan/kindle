@@ -874,13 +874,16 @@
       });
     }
 
-    /* Simple Request POST 不带自定义请求头，彻底避开老 WebKit OPTIONS 预检阻断 */
+    /* Simple Request POST 使用 text/plain 彻底避开老 WebKit OPTIONS 预检阻断 */
     function pushCloudData(cb) {
       var payloadObj = { books: state.books, sessions: state.sessions };
       var payloadStr = JSON.stringify(payloadObj);
 
       var xhr = new XMLHttpRequest();
       xhr.open('POST', getApiUrl(), true);
+      try {
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+      } catch(e) {}
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
