@@ -96,18 +96,23 @@ export default async function handler(req, res) {
     try {
       let body = req.body;
 
-      // Handle raw string body
       if (typeof body === 'string') {
         try { body = JSON.parse(body); } catch(e) {}
       }
 
-      // Handle Vercel body-parser urlencoded key fallback (where raw JSON string becomes object key)
-      if (body && !Array.isArray(body.books)) {
-        const keys = Object.keys(body);
-        if (keys.length > 0 && (keys[0].indexOf('{') === 0 || keys[0].indexOf('{"') === 0)) {
-          try {
-            body = JSON.parse(keys[0]);
-          } catch(e) {}
+      if (!body || typeof body !== 'object' || !Array.isArray(body.books)) {
+        if (body && typeof body === 'object') {
+          // 尝试拼接被 Vercel body-parser 拆分的 urlencoded key
+          const rawKeys = Object.keys(body);
+          if (rawKeys.length > 0) {
+            var fullKeyStr = rawKeys.join('');
+            try {
+              var parsedObj = JSON.parse(fullKeyStr);
+              if (parsedObj && Array.isArray(parsedObj.books)) {
+                body = parsedObj;
+              }
+            } catch(e) {}
+          }
         }
       }
 
