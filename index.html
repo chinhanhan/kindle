@@ -516,9 +516,9 @@
 
         <!-- ③ 云端实时同步 -->
         <div class="section-label">
-          <span>☁ 无缝云端实时同步 (GET双向保底)</span>
+          <span>☁ 无缝云端实时同步 (双向自动容错)</span>
         </div>
-        <div style="font-size: 12px; margin-bottom: 8px;" id="k-sync-status-text">状态：<strong style="color:green;">● 已开启全自动同源云同步</strong></div>
+        <div style="font-size: 12px; margin-bottom: 8px;" id="k-sync-status-text">状态：<strong style="color:green;" id="sync-status-msg">● 已开启全自动同源云同步</strong></div>
         <div class="btn-group">
           <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="manualPushCloud()">☁ 强制同步到云端</button>
           <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="exportSyncCode()">📋 导出同步代码</button>
@@ -559,7 +559,7 @@
       <div class="pc-title-area">
         <h2>📊 个人阅读数据可视化大屏 (PC 管理端)</h2>
         <p style="font-size: 13px; color: #64748b; margin-top: 3px; display:flex; align-items:center; gap:8px;">
-          <span style="color:#059669; font-weight:700;">● 云端双向全自动已连接</span>
+          <span style="color:#059669; font-weight:700;" id="pc-sync-status-indicator">● 云端双向全自动已连接</span>
           <span style="color:#cbd5e1;">|</span>
           <span>Bento Grid 极简白优雅大屏</span>
         </p>
@@ -763,26 +763,39 @@
     }
 
     function mergeCloudAndLocal(cloudData) {
-      if (!cloudData || !cloudData.books) return;
+      if (!cloudData) return;
+      var cloudBooks = cloudData.books || [];
+      var cloudSessions = cloudData.sessions || [];
+      var hasChanges = false;
+
       var bookMap = {};
       var mergedBooks = [];
 
-      for (var i = 0; i < cloudData.books.length; i++) {
-        var cb = cloudData.books[i];
-        if (cb.title === '测试书') continue;
+      // 1. 处理云端图书
+      for (var i = 0; i < cloudBooks.length; i++) {
+        var cb = cloudBooks[i];
+        if (!cb || cb.title === '测试书') continue;
         bookMap[cb.id] = cb;
         if (cb.title) bookMap['t_' + cb.title] = cb;
       }
 
+      // 2. 融入本地图书（合并总用时与完成状态）
       for (var j = 0; j < state.books.length; j++) {
         var lb = state.books[j];
-        if (lb.title === '测试书') continue;
+        if (!lb || lb.title === '测试书') continue;
         var existing = bookMap[lb.id] || (lb.title ? bookMap['t_' + lb.title] : null);
         if (existing) {
-          existing.totalSec = Math.max(existing.totalSec || 0, lb.totalSec || 0);
-          existing.completed = existing.completed || lb.completed;
+          if ((lb.totalSec || 0) > (existing.totalSec || 0)) {
+            existing.totalSec = lb.totalSec;
+            hasChanges = true;
+          }
+          if (lb.completed && !existing.completed) {
+            existing.completed = true;
+            hasChanges = true;
+          }
         } else {
           bookMap[lb.id] = lb;
+          hasChanges = true;
         }
       }
 
@@ -792,15 +805,20 @@
         }
       }
 
+      // 3. 融入打卡记录
       var sessMap = {};
       var mergedSessions = [];
-      var allSessions = (cloudData.sessions || []).concat(state.sessions || []);
+      var allSessions = cloudSessions.concat(state.sessions || []);
       for (var k = 0; k < allSessions.length; k++) {
         var s = allSessions[k];
-        if (!sessMap[s.id]) {
+        if (s && s.id && !sessMap[s.id]) {
           sessMap[s.id] = s;
           mergedSessions.push(s);
         }
+      }
+
+      if (mergedSessions.length > cloudSessions.length) {
+        hasChanges = true;
       }
 
       state.books = mergedBooks;
@@ -808,8 +826,20 @@
       if (!state.activeId && state.books.length > 0) {
         state.activeId = state.books[0].id;
       }
+
       localStorage.setItem('k_reading_v4', JSON.stringify(state));
       render();
+
+      var statusStr = '● 已开启全自动同源云同步 (包含 ' + state.books.length + ' 本书、' + state.sessions.length + ' 条记录)';
+      var statusElem = document.getElementById('sync-status-msg');
+      var pcStatusElem = document.getElementById('pc-sync-status-indicator');
+      if (statusElem) statusElem.innerHTML = statusStr;
+      if (pcStatusElem) pcStatusElem.innerHTML = statusStr;
+
+      // 如果本地有云端没有的新数据，自动反向同步到云端 Gist！
+      if (hasChanges) {
+        pushCloudData(null);
+      }
     }
 
     function fetchCloudData(showAlert) {
@@ -821,7 +851,7 @@
             try {
               var c = JSON.parse(xhr.responseText);
               mergeCloudAndLocal(c);
-              if (showAlert) alert('🎉 云端数据同步成功！');
+              if (showAlert) alert('🎉 云端数据无缝同步成功！包含 ' + state.books.length + ' 本图书。');
             } catch(e) {
               if (showAlert) alert('解析云端数据格式失败');
             }
@@ -840,24 +870,10 @@
     }
 
     function pushCloudData(cb) {
-      var payloadStr = JSON.stringify({ books: state.books, sessions: state.sessions });
-      var url = getApiUrl() + '?data=' + encodeURIComponent(payloadStr);
+      var payloadObj = { books: state.books, sessions: state.sessions };
+      var payloadStr = JSON.stringify(payloadObj);
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', url, true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            if (cb) cb(true, '☁ 数据已成功同步上云！');
-          } else {
-            pushCloudDataPost(cb);
-          }
-        }
-      };
-      xhr.send();
-    }
-
-    function pushCloudDataPost(cb) {
+      // 首选 POST 同步
       var xhr = new XMLHttpRequest();
       xhr.open('POST', getApiUrl(), true);
       xhr.setRequestHeader('Content-Type', 'application/json');
@@ -866,11 +882,28 @@
           if (xhr.status === 200) {
             if (cb) cb(true, '☁ 数据已成功同步上云！');
           } else {
-            if (cb) cb(false, '上传到云端失败，状态码: ' + xhr.status);
+            // POST 失败时备用 GET 同步
+            pushCloudDataGet(payloadStr, cb);
           }
         }
       };
-      xhr.send(JSON.stringify({ books: state.books, sessions: state.sessions }));
+      xhr.send(payloadStr);
+    }
+
+    function pushCloudDataGet(payloadStr, cb) {
+      var url = getApiUrl() + '?data=' + encodeURIComponent(payloadStr);
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            if (cb) cb(true, '☁ 数据已成功同步上云(GET方式)！');
+          } else {
+            if (cb) cb(false, '同步数据失败，状态码: ' + xhr.status);
+          }
+        }
+      };
+      xhr.send();
     }
 
     function exportSyncCode() {
