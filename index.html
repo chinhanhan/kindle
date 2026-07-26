@@ -226,57 +226,101 @@
     .hidden { display: none !important; }
 
     /* ==========================================================================
-       2. PC 端高级可视化大屏专享样式 (PC Dashboard Mode)
+       2. PC 端 Vercel / Linear 顶级 Bento Grid 暗黑大屏样式 (Geist Aesthetic)
        ========================================================================== */
     .pc-mode-container {
-      background: #0f172a;
-      padding: 24px;
+      background: #090d16;
+      padding: 28px;
       min-height: 100vh;
-      color: #f8fafc;
+      color: #f1f5f9;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .pc-header-bar {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .pc-title-area h2 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .pc-card-item {
-      background: #1e293b;
-      border-radius: 14px;
-      padding: 22px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-      margin-bottom: 20px;
-      border: 1px solid #334155;
+      background: #111827;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      margin-bottom: 24px;
+      border: 1px solid #1f2937;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .pc-card-item:hover {
+      border-color: #374151;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
     }
 
     .pc-grid-4 {
       display: flex;
-      gap: 16px;
-      margin-bottom: 20px;
+      gap: 18px;
+      margin-bottom: 24px;
     }
 
     .pc-stat-box {
       flex: 1;
-      background: #1e293b;
-      border: 1px solid #334155;
-      padding: 18px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      background: #111827;
+      border: 1px solid #1f2937;
+      padding: 20px;
+      border-radius: 14px;
+      text-align: left;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pc-stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      opacity: 0.8;
     }
 
     .pc-stat-num {
-      font-size: 28px;
-      font-weight: 800;
+      font-size: 32px;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: -1px;
       color: #38bdf8;
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .pc-stat-label {
       font-size: 13px;
       color: #94a3b8;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .pc-grid-2 {
       display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 24px;
+      margin-bottom: 24px;
     }
 
     .pc-grid-2 .pc-card-item {
@@ -287,7 +331,7 @@
     .pc-chart-header {
       font-size: 15px;
       font-weight: 700;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       color: #f8fafc;
       display: flex;
       justify-content: space-between;
@@ -295,20 +339,23 @@
     }
 
     .filter-pill {
-      background: #334155;
+      background: #1f2937;
       color: #94a3b8;
-      border: none;
-      padding: 4px 12px;
+      border: 1px solid #374151;
+      padding: 5px 14px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      margin-left: 4px;
+      margin-left: 6px;
+      transition: all 0.2s;
     }
 
     .filter-pill.active {
-      background: #38bdf8;
-      color: #0f172a;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
     }
 
     .heatmap-scroll-box {
@@ -318,26 +365,31 @@
 
     .heatmap-grid {
       display: flex;
-      gap: 3px;
+      gap: 4px;
     }
 
     .heatmap-column {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
 
     .heatmap-cell {
-      width: 11px;
-      height: 11px;
-      border-radius: 2px;
-      background-color: #334155;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background-color: #1f2937;
+      transition: transform 0.15s;
     }
 
-    .heatmap-cell.lvl-1 { background-color: #0e4429; }
-    .heatmap-cell.lvl-2 { background-color: #006d32; }
-    .heatmap-cell.lvl-3 { background-color: #26a641; }
-    .heatmap-cell.lvl-4 { background-color: #39d353; }
+    .heatmap-cell:hover {
+      transform: scale(1.3);
+    }
+
+    .heatmap-cell.lvl-1 { background-color: #064e3b; }
+    .heatmap-cell.lvl-2 { background-color: #047857; }
+    .heatmap-cell.lvl-3 { background-color: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+    .heatmap-cell.lvl-4 { background-color: #34d399; box-shadow: 0 0 10px rgba(52,211,153,0.6); }
 
     table.pc-table {
       width: 100%;
@@ -347,44 +399,49 @@
     }
 
     table.pc-table th, table.pc-table td {
-      padding: 10px 12px;
+      padding: 12px 14px;
       text-align: left;
-      border-bottom: 1px solid #334155;
+      border-bottom: 1px solid #1f2937;
     }
 
     table.pc-table th {
-      background: #0f172a;
+      background: #0d1321;
       color: #94a3b8;
       font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
     }
 
     .pc-action-btn {
-      background: #0284c7;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
       color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
+      border: 1px solid #38bdf8;
+      padding: 8px 16px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
     }
 
-    .pc-action-btn:hover { background: #0369a1; }
-    .pc-btn-red { background: #ef4444; }
-    .pc-btn-red:hover { background: #dc2626; }
-    .pc-btn-purple { background: #8b5cf6; }
-    .pc-btn-purple:hover { background: #7c3aed; }
-    .pc-btn-green { background: #10b981; }
-    .pc-btn-green:hover { background: #059669; }
-    .pc-btn-orange { background: #f59e0b; }
-    .pc-btn-orange:hover { background: #d97706; }
+    .pc-action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.5);
+    }
+
+    .pc-btn-red { background: linear-gradient(135deg, #dc2626, #ef4444); border-color: #f87171; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+    .pc-btn-purple { background: linear-gradient(135deg, #7c3aed, #9333ea); border-color: #c084fc; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
+    .pc-btn-green { background: linear-gradient(135deg, #059669, #10b981); border-color: #34d399; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+    .pc-btn-orange { background: linear-gradient(135deg, #d97706, #f59e0b); border-color: #fbbf24; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); }
 
     /* 单本剖析 Modal 弹窗 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(8px);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -392,13 +449,13 @@
     }
 
     .modal-card {
-      background: #1e293b;
-      border: 1px solid #475569;
-      border-radius: 14px;
-      padding: 24px;
-      width: 500px;
-      max-width: 90%;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 18px;
+      padding: 28px;
+      width: 520px;
+      max-width: 92%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
     }
   </style>
 </head>
@@ -495,24 +552,26 @@
   </div>
 
   <!-- ==========================================================================
-       B. 电脑端高级可视化大屏 (PC Dashboard Mode)
+       B. 电脑端 Vercel / Linear 顶级 Bento Grid 暗黑大屏 (Geist Aesthetic)
        ========================================================================== -->
   <div id="pc-ui" class="pc-mode-container hidden">
-    <!-- 头部工具栏卡片 -->
-    <div class="pc-card-item">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <h2 style="font-size: 22px; font-weight: 800; color: #f8fafc;">📊 个人阅读数据可视化大屏 (PC 暗黑管理端)</h2>
-          <p style="font-size: 13px; color: #94a3b8; margin-top: 3px;">全自动同步 Kindle 墨水屏数据 | 海报生成 | 动态时间筛选 | 图书深度剖析</p>
-        </div>
-        <div>
-          <button class="pc-action-btn pc-btn-orange" onclick="generatePoster()">🖼️ 生成阅读成就海报</button>
-          <button class="pc-action-btn" style="margin-left:6px;" onclick="fetchCloudData(true)">🔄 手动拉取云端数据</button>
-          <button class="pc-action-btn pc-btn-green" style="margin-left:6px;" onclick="exportJSONData()">💾 导出 JSON 磁盘备份</button>
-          <button class="pc-action-btn pc-btn-purple" style="margin-left:6px;" onclick="triggerJSONImport()">📤 恢复 JSON 备份文件</button>
-          <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
-          <button class="pc-action-btn" style="background:#334155; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
-        </div>
+    <!-- 头部 Vercel 风格工具栏 -->
+    <div class="pc-header-bar">
+      <div class="pc-title-area">
+        <h2>⚡ KINDLE ANALYTICS DASHBOARD</h2>
+        <p style="font-size: 13px; color: #94a3b8; margin-top: 3px; display:flex; align-items:center; gap:8px;">
+          <span style="color:#10b981; font-weight:700;">● Cloud Sync Active</span>
+          <span style="color:#475569;">|</span>
+          <span>Bento Grid Analytics Engine v4.0</span>
+        </p>
+      </div>
+      <div>
+        <button class="pc-action-btn pc-btn-orange" onclick="generatePoster()">🖼️ 生成阅读成就海报</button>
+        <button class="pc-action-btn" style="margin-left:8px;" onclick="fetchCloudData(true)">🔄 手动拉取云端数据</button>
+        <button class="pc-action-btn pc-btn-green" style="margin-left:8px;" onclick="exportJSONData()">💾 导出 JSON 磁盘备份</button>
+        <button class="pc-action-btn pc-btn-purple" style="margin-left:8px;" onclick="triggerJSONImport()">📤 恢复 JSON 备份文件</button>
+        <button class="pc-action-btn" style="background:#374151; border-color:#4b5563; margin-left:8px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
+        <button class="pc-action-btn" style="background:#1e293b; border-color:#334155; margin-left:8px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
       </div>
     </div>
 
@@ -520,31 +579,31 @@
     <input type="file" id="pc-json-file-input" accept=".json" style="display:none;" onchange="handleJSONFileSelect(event)">
     <canvas id="poster-canvas" width="800" height="1100" style="display:none;"></canvas>
 
-    <!-- 顶栏 4 大数据统计卡片 -->
+    <!-- 顶栏 4 大数据 Bento Bento 统计卡片 -->
     <div class="pc-grid-4">
       <div class="pc-stat-box">
-        <div class="pc-stat-label">累计阅读总时长</div>
-        <div class="pc-stat-num" id="pc-stat-time">0 小时</div>
+        <div class="pc-stat-label">TOTAL TIME LOGGED</div>
+        <div class="pc-stat-num" id="pc-stat-time">0.0 HRS</div>
       </div>
-      <div class="pc-stat-box">
-        <div class="pc-stat-label">连续阅读天数 (Streak)</div>
-        <div class="pc-stat-num" id="pc-stat-streak" style="color:#10b981;">0 天</div>
+      <div class="pc-stat-box" style="&::before{background:linear-gradient(90deg,#10b981,#34d399);}">
+        <div class="pc-stat-label">STREAK DAY COUNT</div>
+        <div class="pc-stat-num" id="pc-stat-streak" style="color:#10b981;">0 DAYS</div>
       </div>
-      <div class="pc-stat-box">
-        <div class="pc-stat-label">已读完图书数量</div>
-        <div class="pc-stat-num" id="pc-stat-completed" style="color:#a855f7;">0 本</div>
+      <div class="pc-stat-box" style="&::before{background:linear-gradient(90deg,#a855f7,#c084fc);}">
+        <div class="pc-stat-label">COMPLETED BOOKS</div>
+        <div class="pc-stat-num" id="pc-stat-completed" style="color:#c084fc;">0 BOOKS</div>
       </div>
-      <div class="pc-stat-box">
-        <div class="pc-stat-label">总打卡记录次数</div>
-        <div class="pc-stat-num" id="pc-stat-sessions" style="color:#f59e0b;">0 次</div>
+      <div class="pc-stat-box" style="&::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}">
+        <div class="pc-stat-label">TOTAL SESSIONS LOGGED</div>
+        <div class="pc-stat-num" id="pc-stat-sessions" style="color:#fbbf24;">0 SESS</div>
       </div>
     </div>
 
     <!-- GitHub 风格打卡热力图卡片 -->
     <div class="pc-card-item">
       <div class="pc-chart-header">
-        <span>🟩 年度阅读打卡热力图 (GitHub Style)</span>
-        <span style="font-size: 12px; font-weight: normal; color: #94a3b8;">浅绿 ➔ 深绿 代表当日阅读时长增加</span>
+        <span>🟩 52-WEEK READING ACTIVITY HEATMAP (GITHUB STYLE)</span>
+        <span style="font-size: 12px; font-weight: normal; color: #94a3b8;">Level 1 ➔ Level 4 Density Spectrum</span>
       </div>
       <div class="heatmap-scroll-box">
         <div class="heatmap-grid" id="pc-heatmap-container"></div>
@@ -556,25 +615,25 @@
       <!-- 柱状图：每日阅读时长 -->
       <div class="pc-card-item">
         <div class="pc-chart-header">
-          <span>📊 每日阅读时长分析 (分钟)</span>
+          <span>📊 DAILY DURATION SPECTRUM (MINUTES)</span>
           <div>
-            <button id="pill-7" class="filter-pill active" onclick="setChartTimeRange(7)">最近7天</button>
-            <button id="pill-30" class="filter-pill" onclick="setChartTimeRange(30)">最近30天</button>
+            <button id="pill-7" class="filter-pill active" onclick="setChartTimeRange(7)">最近 7 天</button>
+            <button id="pill-30" class="filter-pill" onclick="setChartTimeRange(30)">最近 30 天</button>
             <button id="pill-all" class="filter-pill" onclick="setChartTimeRange(0)">全量历史</button>
           </div>
         </div>
-        <div style="height: 220px; position: relative;">
-          <canvas id="pc-bar-canvas" width="400" height="220" style="width: 100%; height: 100%;"></canvas>
+        <div style="height: 230px; position: relative;">
+          <canvas id="pc-bar-canvas" width="400" height="230" style="width: 100%; height: 100%;"></canvas>
         </div>
       </div>
 
       <!-- 环形图：图书用时占比 -->
       <div class="pc-card-item">
         <div class="pc-chart-header">
-          <span>🍩 各图书阅读时长占比 (Top 5)</span>
+          <span>🍩 BOOK DURATION DISTRIBUTION (TOP 5)</span>
         </div>
-        <div style="height: 220px; position: relative;">
-          <canvas id="pc-pie-canvas" width="400" height="220" style="width: 100%; height: 100%;"></canvas>
+        <div style="height: 230px; position: relative;">
+          <canvas id="pc-pie-canvas" width="400" height="230" style="width: 100%; height: 100%;"></canvas>
         </div>
       </div>
     </div>
@@ -583,21 +642,21 @@
     <div class="pc-grid-2">
       <!-- 历史记录表格 -->
       <div class="pc-card-item">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px;">
-          <strong style="font-size:15px; color:#f8fafc;">📝 历史阅读明细记录</strong>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1f2937; padding-bottom:12px;">
+          <strong style="font-size:14px; letter-spacing:0.5px; color:#f8fafc;">📝 HISTORICAL READING LOGS</strong>
           <button class="pc-action-btn" onclick="doManualAddSession()">➕ 手动补录一次阅读</button>
         </div>
         <table class="pc-table">
           <thead>
             <tr>
-              <th>打卡时间</th>
-              <th>图书名称</th>
-              <th>本次时长</th>
-              <th>操作</th>
+              <th>TIMESTAMP</th>
+              <th>BOOK TITLE</th>
+              <th>DURATION</th>
+              <th>ACTION</th>
             </tr>
           </thead>
           <tbody id="pc-history-tbody">
-            <tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无历史记录</td></tr>
+            <tr><td colspan="4" style="text-align:center; color:#64748b;">NO LOGS FOUND</td></tr>
           </tbody>
         </table>
       </div>
@@ -605,7 +664,7 @@
       <!-- 全部图书管理列表 -->
       <div class="pc-card-item">
         <div class="pc-chart-header">
-          <span>📚 全部图书管理列表 (点击图书名可打开深度分析)</span>
+          <span>📚 BOOK MANAGEMENT & ANALYTICS (CLICK FOR DEEP DIVE)</span>
         </div>
         <div id="pc-list-box"></div>
       </div>
@@ -616,26 +675,26 @@
   <!-- 单本图书深度剖析 Modal 弹窗 -->
   <div id="book-modal" class="modal-overlay hidden">
     <div class="modal-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px; margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1f2937; padding-bottom:12px; margin-bottom:18px;">
         <h3 id="modal-book-title" style="font-size:18px; color:#f8fafc;">《图书名称》深度剖析</h3>
-        <button class="pc-action-btn pc-btn-red" style="padding:2px 8px;" onclick="closeBookModal()">✕ 关闭</button>
+        <button class="pc-action-btn pc-btn-red" style="padding:4px 10px;" onclick="closeBookModal()">✕ 关闭</button>
       </div>
-      <div style="display:flex; gap:12px; margin-bottom:16px;">
-        <div style="flex:1; background:#0f172a; padding:12px; border-radius:8px; text-align:center;">
-          <div style="font-size:11px; color:#94a3b8;">累计阅读时长</div>
-          <div id="modal-book-total" style="font-size:20px; font-weight:800; color:#38bdf8;">0分</div>
+      <div style="display:flex; gap:12px; margin-bottom:18px;">
+        <div style="flex:1; background:#090d16; border:1px solid #1f2937; padding:14px; border-radius:10px; text-align:center;">
+          <div style="font-size:11px; color:#94a3b8; font-weight:600;">累计阅读用时</div>
+          <div id="modal-book-total" style="font-size:22px; font-weight:900; font-family:monospace; color:#38bdf8;">0分</div>
         </div>
-        <div style="flex:1; background:#0f172a; padding:12px; border-radius:8px; text-align:center;">
-          <div style="font-size:11px; color:#94a3b8;">平均每次用时</div>
-          <div id="modal-book-avg" style="font-size:20px; font-weight:800; color:#10b981;">0分</div>
+        <div style="flex:1; background:#090d16; border:1px solid #1f2937; padding:14px; border-radius:10px; text-align:center;">
+          <div style="font-size:11px; color:#94a3b8; font-weight:600;">平均每次用时</div>
+          <div id="modal-book-avg" style="font-size:22px; font-weight:900; font-family:monospace; color:#10b981;">0分</div>
         </div>
-        <div style="flex:1; background:#0f172a; padding:12px; border-radius:8px; text-align:center;">
-          <div style="font-size:11px; color:#94a3b8;">打卡总次数</div>
-          <div id="modal-book-count" style="font-size:20px; font-weight:800; color:#a855f7;">0次</div>
+        <div style="flex:1; background:#090d16; border:1px solid #1f2937; padding:14px; border-radius:10px; text-align:center;">
+          <div style="font-size:11px; color:#94a3b8; font-weight:600;">打卡总次数</div>
+          <div id="modal-book-count" style="font-size:22px; font-weight:900; font-family:monospace; color:#c084fc;">0次</div>
         </div>
       </div>
-      <div style="font-size:13px; font-weight:700; color:#94a3b8; margin-bottom:8px;">📅 该图书打卡日志明细：</div>
-      <div id="modal-book-logs" style="max-height:200px; overflow-y:auto; font-size:12px; color:#cbd5e1; border:1px solid #334155; border-radius:6px; padding:8px;"></div>
+      <div style="font-size:13px; font-weight:700; color:#94a3b8; margin-bottom:10px;">📅 该图书打卡日志明细：</div>
+      <div id="modal-book-logs" style="max-height:220px; overflow-y:auto; font-size:12px; color:#cbd5e1; border:1px solid #1f2937; border-radius:8px; padding:10px; background:#090d16;"></div>
     </div>
   </div>
 
@@ -1047,7 +1106,7 @@
     }
 
     /* ==========================================================================
-       3. PC 端可视化图表手绘渲染引擎 (GitHub 热力图 + 柱状图 + 饼图 + Streak + 海报)
+       3. PC 端 Vercel 级渐变手绘 Canvas 图表 (Heatmap + Bar + Donut + Poster)
        ========================================================================== */
     function setChartTimeRange(days) {
       currentRangeDays = days;
@@ -1070,10 +1129,10 @@
       var sessElem = document.getElementById('pc-stat-sessions');
       var streakElem = document.getElementById('pc-stat-streak');
 
-      if (timeElem) timeElem.innerHTML = (totalSec / 3600).toFixed(1) + ' 小时';
-      if (compElem) compElem.innerHTML = completedCount + ' 本';
-      if (sessElem) sessElem.innerHTML = state.sessions.length + ' 次';
-      if (streakElem) streakElem.innerHTML = calculateStreak() + ' 天';
+      if (timeElem) timeElem.innerHTML = (totalSec / 3600).toFixed(1) + ' HRS';
+      if (compElem) compElem.innerHTML = completedCount + ' BOOKS';
+      if (sessElem) sessElem.innerHTML = state.sessions.length + ' SESS';
+      if (streakElem) streakElem.innerHTML = calculateStreak() + ' DAYS';
 
       renderHeatmap();
       renderBarChart();
@@ -1082,7 +1141,7 @@
       var tbody = document.getElementById('pc-history-tbody');
       if (tbody) {
         if (state.sessions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无历史记录</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">NO LOGS FOUND</td></tr>';
         } else {
           var hHtml = '';
           for (var k = state.sessions.length - 1; k >= 0; k--) {
@@ -1095,10 +1154,10 @@
               }
             }
             hHtml += '<tr>' +
-                       '<td>' + new Date(s.time).toLocaleString() + '</td>' +
-                       '<td><strong style="cursor:pointer; text-decoration:underline;" onclick="openBookDetailModal(\'' + s.bookId + '\')">《' + escapeStr(bTitle) + '》</strong></td>' +
-                       '<td>' + formatMin(s.sec) + '</td>' +
-                       '<td><button class="pc-action-btn pc-btn-red" style="padding:2px 8px;" onclick="deleteSession(\'' + s.id + '\')">删除</button></td>' +
+                       '<td><span style="font-family:monospace; color:#94a3b8;">' + new Date(s.time).toLocaleString() + '</span></td>' +
+                       '<td><strong style="cursor:pointer; color:#38bdf8; text-decoration:underline;" onclick="openBookDetailModal(\'' + s.bookId + '\')">《' + escapeStr(bTitle) + '》</strong></td>' +
+                       '<td><span style="font-weight:700; color:#10b981;">' + formatMin(s.sec) + '</span></td>' +
+                       '<td><button class="pc-action-btn pc-btn-red" style="padding:2px 8px; font-size:11px;" onclick="deleteSession(\'' + s.id + '\')">DELETE</button></td>' +
                      '</tr>';
           }
           tbody.innerHTML = hHtml;
@@ -1108,16 +1167,16 @@
       var pcBox = document.getElementById('pc-list-box');
       if (pcBox) {
         if (state.books.length === 0) {
-          pcBox.innerHTML = '<div style="color:#94a3b8; font-size:13px;">暂无图书数据</div>';
+          pcBox.innerHTML = '<div style="color:#64748b; font-size:13px;">NO BOOKS LOGGED</div>';
         } else {
           var pcHtml = '';
           for (var n = 0; n < state.books.length; n++) {
             var bItem = state.books[n];
-            pcHtml += '<div style="border-bottom:1px solid #334155; padding:8px 0; display:flex; justify-content:space-between; align-items:center;">' +
-                        '<div><strong style="cursor:pointer; color:#38bdf8; text-decoration:underline;" onclick="openBookDetailModal(\'' + bItem.id + '\')">《' + escapeStr(bItem.title) + '》</strong> <span style="font-size:12px; color:#94a3b8;">(累计 ' + formatMin(bItem.totalSec) + ')</span></div>' +
+            pcHtml += '<div style="border-bottom:1px solid #1f2937; padding:10px 0; display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div><strong style="cursor:pointer; color:#38bdf8; text-decoration:underline; font-size:14px;" onclick="openBookDetailModal(\'' + bItem.id + '\')">《' + escapeStr(bItem.title) + '》</strong> <span style="font-size:12px; color:#94a3b8; font-family:monospace; margin-left:6px;">(' + formatMin(bItem.totalSec) + ')</span></div>' +
                         '<div>' +
-                          '<button class="pc-action-btn" style="padding:3px 8px;" onclick="toggleComplete(\'' + bItem.id + '\')">' + (bItem.completed ? '取消读完' : '标记读完') + '</button> ' +
-                          '<button class="pc-action-btn pc-btn-red" style="padding:3px 8px;" onclick="deleteBook(\'' + bItem.id + '\')">删除图书</button>' +
+                          '<button class="pc-action-btn" style="padding:3px 8px; font-size:11px;" onclick="toggleComplete(\'' + bItem.id + '\')">' + (bItem.completed ? 'UNMARK' : 'MARK DONE') + '</button> ' +
+                          '<button class="pc-action-btn pc-btn-red" style="padding:3px 8px; font-size:11px; margin-left:4px;" onclick="deleteBook(\'' + bItem.id + '\')">DEL</button>' +
                         '</div>' +
                       '</div>';
           }
@@ -1147,10 +1206,10 @@
 
       var lHtml = '';
       if (logs.length === 0) {
-        lHtml = '<div style="text-align:center; color:#94a3b8; padding:8px;">暂无打卡日志</div>';
+        lHtml = '<div style="text-align:center; color:#64748b; padding:8px;">暂无打卡日志</div>';
       } else {
         for (var j = logs.length - 1; j >= 0; j--) {
-          lHtml += '<div style="padding:4px 0; border-bottom:1px solid #1e293b;">📅 ' + new Date(logs[j].time).toLocaleString() + ' — 阅读 <strong>' + formatMin(logs[j].sec) + '</strong></div>';
+          lHtml += '<div style="padding:6px 0; border-bottom:1px solid #1f2937; font-family:monospace;">📅 ' + new Date(logs[j].time).toLocaleString() + ' — 阅读 <strong style="color:#10b981;">' + formatMin(logs[j].sec) + '</strong></div>';
         }
       }
       document.getElementById('modal-book-logs').innerHTML = lHtml;
@@ -1225,6 +1284,7 @@
       container.innerHTML = html;
     }
 
+    /* 手绘 Vercel 渐变发光柱状图 */
     function renderBarChart() {
       var canvas = document.getElementById('pc-bar-canvas');
       if (!canvas || !canvas.getContext) return;
@@ -1258,8 +1318,21 @@
       }
 
       var padding = 30;
-      var barW = numDays > 14 ? 8 : 32;
+      var barW = numDays > 14 ? 8 : 28;
       var gap = (w - padding * 2 - barW * numDays) / (numDays - 1 || 1);
+
+      // 绘制虚线网格
+      ctx.strokeStyle = '#1f2937';
+      ctx.lineWidth = 1;
+      for (var g = 1; g <= 3; g++) {
+        var gy = h - padding - (g / 3) * (h - padding * 2 - 20);
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(padding, gy);
+        ctx.lineTo(w - padding, gy);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
 
       for (var idx = 0; idx < days.length; idx++) {
         var val = dayMap[days[idx].key] || 0;
@@ -1267,24 +1340,30 @@
         var x = padding + idx * (barW + gap);
         var y = h - padding - barH;
 
-        ctx.fillStyle = '#38bdf8';
+        // Vercel 电光蓝渐变
+        var grad = ctx.createLinearGradient(0, y, 0, h - padding);
+        grad.addColorStop(0, '#38bdf8');
+        grad.addColorStop(1, '#0284c7');
+
+        ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.rect(x, y, barW, barH);
         ctx.fill();
 
         if (numDays <= 10) {
           ctx.fillStyle = '#f8fafc';
-          ctx.font = 'bold 11px sans-serif';
+          ctx.font = 'bold 10px monospace';
           ctx.textAlign = 'center';
           ctx.fillText(val + 'm', x + barW / 2, y - 6);
 
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '11px sans-serif';
+          ctx.fillStyle = '#64748b';
+          ctx.font = '10px monospace';
           ctx.fillText(days[idx].label, x + barW / 2, h - 8);
         }
       }
     }
 
+    /* 手绘 Vercel 渐变发光环形图 */
     function renderPieChart() {
       var canvas = document.getElementById('pc-pie-canvas');
       if (!canvas || !canvas.getContext) return;
@@ -1294,10 +1373,10 @@
       ctx.clearRect(0, 0, w, h);
 
       if (state.books.length === 0) {
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#64748b';
         ctx.font = '13px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('暂无数据', w / 2, h / 2);
+        ctx.fillText('NO DATA AVAILABLE', w / 2, h / 2);
         return;
       }
 
@@ -1307,18 +1386,18 @@
       }
 
       if (totalSec === 0) {
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#64748b';
         ctx.font = '13px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('暂无打卡用时记录', w / 2, h / 2);
+        ctx.fillText('NO DURATION LOGGED', w / 2, h / 2);
         return;
       }
 
-      var colors = ['#38bdf8', '#10b981', '#f59e0b', '#a855f7', '#ec4899', '#64748b'];
+      var colors = ['#38bdf8', '#10b981', '#fbbf24', '#c084fc', '#f43f5e', '#64748b'];
       var cx = 110;
       var cy = h / 2;
       var r = 75;
-      var innerR = 45;
+      var innerR = 48;
 
       var startAngle = -Math.PI / 2;
       for (var j = 0; j < Math.min(state.books.length, 5); j++) {
@@ -1336,19 +1415,19 @@
         var legX = 210;
         var legY = 40 + j * 32;
         ctx.fillStyle = colors[j % colors.length];
-        ctx.fillRect(legX, legY, 14, 14);
+        ctx.fillRect(legX, legY, 12, 12);
 
         ctx.fillStyle = '#f8fafc';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'left';
         var pct = ((bk.totalSec / totalSec) * 100).toFixed(1) + '%';
-        ctx.fillText(escapeStr(bk.title).substring(0, 8) + ' (' + pct + ')', legX + 22, legY + 11);
+        ctx.fillText(escapeStr(bk.title).substring(0, 8) + ' (' + pct + ')', legX + 20, legY + 11);
 
         startAngle = endAngle;
       }
     }
 
-    /* 生成高清阅读成就分享海报 */
+    /* 生成 Vercel 极客黑金阅读成就海报 */
     function generatePoster() {
       var canvas = document.getElementById('poster-canvas');
       if (!canvas || !canvas.getContext) return;
@@ -1356,14 +1435,14 @@
       var w = canvas.width;
       var h = canvas.height;
 
-      // 1. 深邃暗黑背景
-      ctx.fillStyle = '#0f172a';
+      // 1. Vercel 深邃暗黑底色
+      ctx.fillStyle = '#090d16';
       ctx.fillRect(0, 0, w, h);
 
-      // 2. 顶部金色勋章边框卡片
-      ctx.fillStyle = '#1e293b';
+      // 2. 霓虹金边框架
+      ctx.fillStyle = '#111827';
       ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.roundRect(40, 40, w - 80, h - 80, 20);
       ctx.fill();
@@ -1371,9 +1450,9 @@
 
       // 3. 标题与名言
       ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 36px sans-serif';
+      ctx.font = 'bold 36px Inter, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('📖 个人阅读成就里程碑', w / 2, 110);
+      ctx.fillText('📖 READING ACHIEVEMENTS', w / 2, 110);
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = 'italic 18px serif';
@@ -1388,33 +1467,33 @@
       var streak = calculateStreak();
 
       // 累计时长框
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#090d16';
       ctx.fillRect(80, 190, 200, 100);
-      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.fillText('累计阅读时长', 180, 220);
-      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(totalHours + ' 小时', 180, 265);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '12px monospace'; ctx.fillText('TOTAL HOURS LOGGED', 180, 220);
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 28px monospace'; ctx.fillText(totalHours + ' HRS', 180, 265);
 
       // 连续天数框
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#090d16';
       ctx.fillRect(300, 190, 200, 100);
-      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.fillText('连续打卡天数', 400, 220);
-      ctx.fillStyle = '#10b981'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(streak + ' 天', 400, 265);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '12px monospace'; ctx.fillText('STREAK DAY COUNT', 400, 220);
+      ctx.fillStyle = '#10b981'; ctx.font = 'bold 28px monospace'; ctx.fillText(streak + ' DAYS', 400, 265);
 
       // 累计图书框
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#090d16';
       ctx.fillRect(520, 190, 200, 100);
-      ctx.fillStyle = '#94a3b8'; ctx.font = '14px sans-serif'; ctx.fillText('累计图书书单', 620, 220);
-      ctx.fillStyle = '#a855f7'; ctx.font = 'bold 28px sans-serif'; ctx.fillText(state.books.length + ' 本', 620, 265);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '12px monospace'; ctx.fillText('TOTAL BOOKS LOGGED', 620, 220);
+      ctx.fillStyle = '#c084fc'; ctx.font = 'bold 28px monospace'; ctx.fillText(state.books.length + ' BOOKS', 620, 265);
 
       // 5. 阅读书单 Top 列表
       ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 22px sans-serif';
+      ctx.font = 'bold 22px Inter, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('📚 精选阅读书单成就：', 80, 340);
+      ctx.fillText('📚 TOP READING SHELF ACHIEVEMENTS:', 80, 340);
 
       var yPos = 380;
       for (var b = 0; b < Math.min(state.books.length, 6); b++) {
         var bk = state.books[b];
-        ctx.fillStyle = '#0f172a';
+        ctx.fillStyle = '#090d16';
         ctx.fillRect(80, yPos, w - 160, 50);
 
         ctx.fillStyle = '#f8fafc';
@@ -1423,18 +1502,19 @@
 
         ctx.fillStyle = '#38bdf8';
         ctx.textAlign = 'right';
-        ctx.fillText('用时 ' + formatMin(bk.totalSec), w - 100, yPos + 32);
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText(formatMin(bk.totalSec), w - 100, yPos + 32);
         ctx.textAlign = 'left';
 
         yPos += 62;
       }
 
-      // 6. 底部二元码签名
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '14px sans-serif';
+      // 6. 底部 Vercel 签名
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px monospace';
       ctx.textAlign = 'center';
       var dStr = new Date().toLocaleDateString();
-      ctx.fillText('Kindle & PC 自动同步阅读大屏 | 签发日期: ' + dStr, w / 2, h - 80);
+      ctx.fillText('KINDLE ANALYTICS BENTO GRID ENGINE | ISSUED: ' + dStr, w / 2, h - 80);
 
       // 下载生成 PNG 图片
       var link = document.createElement('a');
