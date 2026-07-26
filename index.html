@@ -6,7 +6,7 @@
   <title>Kindle & PC 独立双端阅读成就看板</title>
   <style>
     /* ==========================================================================
-       1. 6寸 Kindle 墨水屏超强兼容与高对比度样式 (ES5/E-Ink Optimized)
+       1. 6寸 Kindle 墨水屏高级极简高对比度样式 (ES5/E-Ink Optimized Premium UI)
        ========================================================================== */
     * {
       box-sizing: border-box;
@@ -20,13 +20,51 @@
       background-color: #ffffff;
       color: #000000;
       line-height: 1.4;
-      padding: 8px;
+      padding: 10px;
       max-width: 900px;
       margin: 0 auto;
     }
 
     header {
       border-bottom: 3px solid #000000;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pill {
+      border: 2px solid #000000;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 20px;
+      background: #ffffff;
+    }
+
+    .card {
+      border: 2.5px solid #000000;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 14px;
+      background: #ffffff;
+      box-shadow: 0 2px 0 #000000;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: bold;
+      border-bottom: 1.5px dashed #000000;
       padding-bottom: 6px;
       margin-bottom: 10px;
       display: flex;
@@ -34,45 +72,17 @@
       align-items: center;
     }
 
-    h1 {
-      font-size: 17px;
-      font-weight: 900;
-      letter-spacing: 0.5px;
-    }
-
-    .clock-badge {
-      border: 2px solid #000000;
-      padding: 2px 6px;
-      font-size: 13px;
-      font-weight: bold;
-      background: #ffffff;
-    }
-
-    .card {
-      border: 2px solid #000000;
-      padding: 10px;
-      margin-bottom: 12px;
-      background: #ffffff;
-    }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: bold;
-      border-bottom: 1px dashed #000000;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
-    }
-
     select, input[type="text"] {
       width: 100%;
       height: 48px;
       border: 2px solid #000000;
+      border-radius: 6px;
       padding: 0 10px;
       font-size: 16px;
+      font-weight: bold;
       background: #ffffff;
       color: #000000;
       outline: none;
-      border-radius: 0;
       margin-bottom: 8px;
       -webkit-appearance: none;
     }
@@ -80,11 +90,12 @@
     .btn {
       display: block;
       width: 100%;
-      height: 52px;
-      line-height: 48px;
+      height: 54px;
+      line-height: 50px;
       background: #ffffff;
       color: #000000;
-      border: 2px solid #000000;
+      border: 2.5px solid #000000;
+      border-radius: 8px;
       font-size: 17px;
       font-weight: bold;
       text-align: center;
@@ -111,47 +122,54 @@
 
     .btn-group {
       display: flex;
-      gap: 6px;
+      gap: 8px;
     }
 
     .btn-group .btn {
       flex: 1;
     }
 
-    .timer-box {
+    /* 三合一主打卡焦点区 */
+    .focus-box {
       text-align: center;
-      padding: 10px 0;
+      padding: 12px 0 6px 0;
     }
 
-    .timer-name {
+    .book-badge-name {
+      display: inline-block;
+      border: 2px solid #000000;
+      border-radius: 6px;
+      padding: 4px 12px;
       font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 4px;
+      font-weight: 800;
+      background: #ffffff;
+      margin-bottom: 8px;
     }
 
-    .timer-val {
-      font-size: 48px;
+    .timer-display {
+      font-size: 52px;
       font-weight: 900;
       font-family: Courier, monospace, sans-serif;
-      letter-spacing: 1px;
-      margin: 4px 0;
+      letter-spacing: 2px;
+      margin: 6px 0 12px 0;
     }
 
     .stat-row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 8px;
     }
 
     .stat-card {
       flex: 1;
       border: 2px solid #000000;
+      border-radius: 6px;
       padding: 8px;
       text-align: center;
     }
 
     .stat-n {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 900;
     }
 
@@ -162,18 +180,19 @@
 
     .book-line {
       border-bottom: 1px solid #000000;
-      padding: 6px 0;
+      padding: 8px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .sm-btn {
-      border: 1.5px solid #000000;
+      border: 2px solid #000000;
+      border-radius: 4px;
       background: #ffffff;
-      padding: 4px 8px;
-      font-size: 12px;
+      padding: 5px 10px;
+      font-size: 13px;
       font-weight: bold;
       cursor: pointer;
     }
@@ -318,24 +337,31 @@
     .pc-btn-red:hover { background: #dc2626; }
     .pc-btn-purple { background: #8b5cf6; }
     .pc-btn-purple:hover { background: #7c3aed; }
+    .pc-btn-green { background: #10b981; }
+    .pc-btn-green:hover { background: #059669; }
   </style>
 </head>
 <body>
 
   <!-- ==========================================================================
-       A. KINDLE 6寸屏极简视图 (100% 隔离不加载任何图表代码)
+       A. KINDLE 6寸屏极简高级感视图 (ES5 Optimized)
        ========================================================================== -->
   <div id="kindle-ui">
     <header>
-      <h1>📖 Kindle 阅读计时器</h1>
-      <span class="clock-badge" id="k-clock">00:00</span>
+      <div class="brand-title">📖 阅读成就看板</div>
+      <div class="status-pill">● ☁ 云端全自动同源连接</div>
     </header>
 
-    <!-- 图书选择卡片 -->
+    <!-- 沉浸式主打卡三合一卡片 (Focus Card) -->
     <div class="card">
-      <div class="card-title">① 选择当前阅读图书</div>
+      <div class="card-title">
+        <span>📖 阅读专注中心</span>
+        <span id="k-clock" style="font-weight:900;">00:00</span>
+      </div>
+
+      <!-- ① 选择或新增图书 -->
       <select id="k-select" onchange="onSelectChange(this.value)">
-        <option value="">-- 请选择图书 --</option>
+        <option value="">-- 点击选择阅读图书 --</option>
       </select>
 
       <div id="k-add-form" class="hidden">
@@ -345,37 +371,33 @@
           <button class="btn" onclick="toggleAddForm(false)">取消</button>
         </div>
       </div>
-      <button id="k-btn-show-add" class="btn" onclick="toggleAddForm(true)">➕ 添加新书</button>
-    </div>
+      <button id="k-btn-show-add" class="btn" style="height:44px; line-height:40px; font-size:15px;" onclick="toggleAddForm(true)">➕ 添加新书</button>
 
-    <!-- 计时面板卡片 -->
-    <div class="card">
-      <div class="card-title">② 正在阅读 (退出网页看书不影响计时间)</div>
-      <div class="timer-box">
-        <div class="timer-name" id="k-book-title-display">未选择图书</div>
-        <div class="timer-val" id="k-timer-display">00:00:00</div>
+      <!-- ② 核心计时控制区域 -->
+      <div class="focus-box">
+        <div class="book-badge-name" id="k-book-title-display">未选择图书</div>
+        <div class="timer-display" id="k-timer-display">00:00:00</div>
       </div>
 
       <div class="btn-group">
-        <button id="btn-start" class="btn btn-solid" onclick="doStart()">▶ 开始阅读</button>
-        <button id="btn-pause" class="btn hidden" onclick="doPause()">⏸ 暂停</button>
+        <button id="btn-start" class="btn btn-solid" style="height:56px; font-size:18px;" onclick="doStart()">▶ 开始阅读</button>
+        <button id="btn-pause" class="btn hidden" style="height:56px; font-size:18px;" onclick="doPause()">⏸ 暂停</button>
       </div>
-      <button id="btn-finish" class="btn hidden" onclick="doFinish()" style="margin-top: 6px;">⏹ 完成并保存本次阅读</button>
+      <button id="btn-finish" class="btn hidden" style="height:56px; font-size:18px; margin-top: 6px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
     </div>
 
-    <!-- 云同步状态卡片 -->
+    <!-- 快捷云同步与代码备份卡片 -->
     <div class="card">
-      <div class="card-title">☁ 无缝云端实时同步 (GET双向保底)</div>
-      <div style="font-size: 12px; margin-bottom: 6px;" id="k-sync-status-text">状态：<strong style="color:green;">☁ 已开启全自动同源云同步</strong></div>
+      <div class="card-title">☁ 云端实时同步</div>
       <div class="btn-group">
-        <button class="btn btn-solid" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="manualPushCloud()">☁ 立即上传数据到云端</button>
-        <button class="btn" style="height: 42px; line-height: 38px; font-size: 14px;" onclick="exportSyncCode()">📋 导出同步代码</button>
+        <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px;" onclick="manualPushCloud()">☁ 强制同步到云端</button>
+        <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px;" onclick="exportSyncCode()">📋 导出同步代码</button>
       </div>
     </div>
 
-    <!-- 成就看板卡片 -->
+    <!-- 累计成就与图书明细卡片 -->
     <div class="card">
-      <div class="card-title">🏆 累计成就与单本明细</div>
+      <div class="card-title">🏆 阅读成就明细</div>
       <div class="stat-row">
         <div class="stat-card">
           <div class="stat-l">总阅读时长</div>
@@ -403,16 +425,20 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
           <h2 style="font-size: 22px; font-weight: 800; color: #0f172a;">📊 个人阅读数据可视化大屏 (PC 管理端)</h2>
-          <p style="font-size: 13px; color: #64748b; margin-top: 3px;">全自动同步 Kindle 墨水屏数据 | 多维度图表报表 & 历史记录导出</p>
+          <p style="font-size: 13px; color: #64748b; margin-top: 3px;">全自动同步 Kindle 墨水屏数据 | 硬盘 JSON 备份与 CSV 导出</p>
         </div>
         <div>
-          <button class="pc-action-btn" onclick="fetchCloudData(true)">🔄 手动拉取云端新数据</button>
-          <button class="pc-action-btn pc-btn-purple" style="margin-left:6px;" onclick="importSyncCode()">📥 导入 Kindle 数据代码</button>
+          <button class="pc-action-btn" onclick="fetchCloudData(true)">🔄 手动拉取云端数据</button>
+          <button class="pc-action-btn pc-btn-green" style="margin-left:6px;" onclick="exportJSONData()">💾 导出 JSON 磁盘备份</button>
+          <button class="pc-action-btn pc-btn-purple" style="margin-left:6px;" onclick="triggerJSONImport()">📤 恢复 JSON 备份文件</button>
           <button class="pc-action-btn" style="background:#64748b; margin-left:6px;" onclick="exportCSVData()">📥 导出 CSV 报表</button>
           <button class="pc-action-btn" style="background:#475569; margin-left:6px;" onclick="switchToKindleMode()">📱 切换回 Kindle 极简视图</button>
         </div>
       </div>
     </div>
+
+    <!-- 隐藏的 JSON 文件选择器 -->
+    <input type="file" id="pc-json-file-input" accept=".json" style="display:none;" onchange="handleJSONFileSelect(event)">
 
     <!-- 顶栏 4 大数据统计卡片 -->
     <div class="pc-grid-4">
@@ -642,7 +668,6 @@
       });
     }
 
-    // 采用 GET 方式提交 URL 参数 (零 CORS 预检，100% 强效保底兼容老版本 Kindle)
     function pushCloudData(cb) {
       var payloadStr = JSON.stringify({ books: state.books, sessions: state.sessions });
       var url = getApiUrl() + '?data=' + encodeURIComponent(payloadStr);
@@ -682,24 +707,50 @@
       prompt('这是您的全量同步代码，复制后可在电脑端点击“导入代码”瞬间恢复：', code);
     }
 
-    function importSyncCode() {
-      var code = prompt('请粘贴 Kindle 导出的同步代码：');
-      if (!code) return;
-      try {
-        var raw = decodeURIComponent(atob(code.replace(/^\s+|\s+$/g, '')));
-        var c = JSON.parse(raw);
-        mergeCloudAndLocal(c);
-        pushCloudData(null);
-        alert('🎉 成功导入 Kindle 数据！');
-      } catch(e) {
-        alert('同步代码格式错误，请检查后再试。');
-      }
+    /* PC 端全量 JSON 文件导出备份与读取恢复 */
+    function exportJSONData() {
+      if (state.books.length === 0 && state.sessions.length === 0) return alert('暂无数据可导出备份');
+      var jsonStr = JSON.stringify({ books: state.books, sessions: state.sessions }, null, 2);
+      var blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      var dStr = new Date().toISOString().substring(0, 10);
+      link.setAttribute('download', 'Kindle_Reading_Backup_' + dStr + '.json');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function triggerJSONImport() {
+      var fileInput = document.getElementById('pc-json-file-input');
+      if (fileInput) fileInput.click();
+    }
+
+    function handleJSONFileSelect(evt) {
+      var files = evt.target.files;
+      if (!files || files.length === 0) return;
+      var file = files[0];
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var c = JSON.parse(e.target.result);
+          if (c && c.books) {
+            mergeCloudAndLocal(c);
+            pushCloudData(null);
+            alert('🎉 成功从 JSON 文件无损恢复阅读数据！');
+          } else {
+            alert('备份文件数据格式不正确');
+          }
+        } catch(err) {
+          alert('解析 JSON 备份文件失败');
+        }
+      };
+      reader.readAsText(file);
     }
 
     function render() {
       renderSelect();
       renderStats();
-      // 只有在 PC 大屏视图开启时才渲染图表，彻底消除 Kindle 卡顿
       var pcUi = document.getElementById('pc-ui');
       if (pcUi && pcUi.className.indexOf('hidden') === -1) {
         renderPCDashboard();
@@ -709,7 +760,7 @@
     function renderSelect() {
       var select = document.getElementById('k-select');
       if (!select) return;
-      var html = '<option value="">-- 请选择图书 --</option>';
+      var html = '<option value="">-- 点击选择阅读图书 --</option>';
       for (var i = 0; i < state.books.length; i++) {
         var b = state.books[i];
         var sel = (b.id === state.activeId) ? ' selected' : '';
@@ -904,16 +955,10 @@
       if (sessElem) sessElem.innerHTML = state.sessions.length + ' 次';
       if (streakElem) streakElem.innerHTML = calculateStreak() + ' 天';
 
-      // 1. 渲染 GitHub 风格年度热力图
       renderHeatmap();
-
-      // 2. 渲染最近 7 天柱状图
       renderBarChart();
-
-      // 3. 渲染图书用时占比环形图
       renderPieChart();
 
-      // 4. 渲染历史记录表格与图书列表
       var tbody = document.getElementById('pc-history-tbody');
       if (tbody) {
         if (state.sessions.length === 0) {
@@ -961,7 +1006,6 @@
       }
     }
 
-    // 计算连续阅读天数 (Streak)
     function calculateStreak() {
       if (state.sessions.length === 0) return 0;
       var dates = {};
@@ -976,7 +1020,6 @@
           streak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
-          // 如果今天是0次但昨天有，不中断
           if (streak === 0) {
             checkDate.setDate(checkDate.getDate() - 1);
             if (dates[checkDate.toDateString()]) {
@@ -991,7 +1034,6 @@
       return streak;
     }
 
-    // 渲染 GitHub 风格 52 周热力图
     function renderHeatmap() {
       var container = document.getElementById('pc-heatmap-container');
       if (!container) return;
@@ -1005,7 +1047,6 @@
 
       var html = '';
       var today = new Date();
-      // 计算52周前（共364天）
       var startDate = new Date();
       startDate.setDate(today.getDate() - 364);
 
@@ -1029,7 +1070,6 @@
       container.innerHTML = html;
     }
 
-    // 渲染最近 7 天柱状图 (Canvas 极速自绘)
     function renderBarChart() {
       var canvas = document.getElementById('pc-bar-canvas');
       if (!canvas || !canvas.getContext) return;
@@ -1071,26 +1111,22 @@
         var x = padding + idx * (barW + gap);
         var y = h - padding - barH;
 
-        // 画柱子
         ctx.fillStyle = '#3b82f6';
         ctx.beginPath();
         ctx.rect(x, y, barW, barH);
         ctx.fill();
 
-        // 画数值
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(val + 'm', x + barW / 2, y - 6);
 
-        // 画日期
         ctx.fillStyle = '#64748b';
         ctx.font = '11px sans-serif';
         ctx.fillText(days[idx].label, x + barW / 2, h - 8);
       }
     }
 
-    // 渲染图书用时占比环形图 (Canvas 极速自绘)
     function renderPieChart() {
       var canvas = document.getElementById('pc-pie-canvas');
       if (!canvas || !canvas.getContext) return;
@@ -1139,7 +1175,6 @@
         ctx.fillStyle = colors[j % colors.length];
         ctx.fill();
 
-        // 画图例
         var legX = 210;
         var legY = 40 + j * 32;
         ctx.fillStyle = colors[j % colors.length];
