@@ -516,9 +516,9 @@
 
         <!-- ③ 云端实时同步 -->
         <div class="section-label">
-          <span>☁ 无缝云端实时同步 (双向自动容错)</span>
+          <span>☁ 无缝云端实时同步 (15秒全自动轮询)</span>
         </div>
-        <div style="font-size: 12px; margin-bottom: 8px;" id="k-sync-status-text">状态：<strong style="color:green;" id="sync-status-msg">● 已开启全自动同源云同步</strong></div>
+        <div style="font-size: 12px; margin-bottom: 8px;" id="k-sync-status-text">状态：<strong style="color:green;" id="sync-status-msg">● 15秒静默轮询同步中</strong></div>
         <div class="btn-group">
           <button class="btn btn-solid" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="manualPushCloud()">☁ 强制同步到云端</button>
           <button class="btn" style="height: 44px; line-height: 40px; font-size: 14px; border-radius:22px;" onclick="exportSyncCode()">📋 导出同步代码</button>
@@ -559,7 +559,7 @@
       <div class="pc-title-area">
         <h2>📊 个人阅读数据可视化大屏 (PC 管理端)</h2>
         <p style="font-size: 13px; color: #64748b; margin-top: 3px; display:flex; align-items:center; gap:8px;">
-          <span style="color:#059669; font-weight:700;" id="pc-sync-status-indicator">● 云端双向全自动已连接</span>
+          <span style="color:#059669; font-weight:700;" id="pc-sync-status-indicator">● 15秒后台全自动实时轮询已开启</span>
           <span style="color:#cbd5e1;">|</span>
           <span>Bento Grid 极简白优雅大屏</span>
         </p>
@@ -731,6 +731,11 @@
       }
       render();
       fetchCloudData(false);
+
+      // 开启 15 秒后台全自动静默轮询云同步 (双向实时同源同步)
+      setInterval(function() {
+        fetchCloudData(false);
+      }, 15000);
     };
 
     function startClock() {
@@ -830,7 +835,7 @@
       localStorage.setItem('k_reading_v4', JSON.stringify(state));
       render();
 
-      var statusStr = '● 已开启全自动同源云同步 (包含 ' + state.books.length + ' 本书、' + state.sessions.length + ' 条记录)';
+      var statusStr = '● 15秒后台实时同步 (含 ' + state.books.length + ' 本书、' + state.sessions.length + ' 条记录)';
       var statusElem = document.getElementById('sync-status-msg');
       var pcStatusElem = document.getElementById('pc-sync-status-indicator');
       if (statusElem) statusElem.innerHTML = statusStr;
@@ -869,20 +874,18 @@
       });
     }
 
+    /* Simple Request POST 不带自定义请求头，彻底避开老 WebKit OPTIONS 预检阻断 */
     function pushCloudData(cb) {
       var payloadObj = { books: state.books, sessions: state.sessions };
       var payloadStr = JSON.stringify(payloadObj);
 
-      // 首选 POST 同步
       var xhr = new XMLHttpRequest();
       xhr.open('POST', getApiUrl(), true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
             if (cb) cb(true, '☁ 数据已成功同步上云！');
           } else {
-            // POST 失败时备用 GET 同步
             pushCloudDataGet(payloadStr, cb);
           }
         }
