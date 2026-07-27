@@ -965,10 +965,31 @@
       state.books = mergedBooks;
       state.sessions = mergedSessions;
 
-      // 云端与本地同步活动计时器
-      if (!state.activeTimer && cloudTimer && cloudTimer.isRunning) {
-        state.activeTimer = cloudTimer;
-        restoreActiveTimer();
+      // 双向跨设备 100% 实时关联网靠活动计时器状态 (Kindle ↔ PC)
+      if (cloudTimer && cloudTimer.isRunning) {
+        if (!state.activeTimer || state.activeTimer.startTime !== cloudTimer.startTime || state.activeTimer.isPaused !== cloudTimer.isPaused) {
+          state.activeTimer = cloudTimer;
+          restoreActiveTimer();
+        }
+      } else if (!cloudTimer && state.activeTimer) {
+        // 云端打卡完成已保存，清除本地运行的活动计时器
+        clearInterval(timer.intervalId);
+        timer.running = false;
+        timer.paused = false;
+        timer.elapsedSec = 0;
+        state.activeTimer = null;
+        var displayElem = document.getElementById('k-timer-display');
+        if (displayElem) displayElem.innerHTML = '00:00:00';
+        var btnStart = document.getElementById('btn-start');
+        if (btnStart) { btnStart.innerHTML = '▶ 开始阅读'; btnStart.className = 'btn btn-solid'; }
+        var btnPause = document.getElementById('btn-pause');
+        if (btnPause) btnPause.className = 'btn hidden';
+        var btnAdjust = document.getElementById('btn-adjust');
+        if (btnAdjust) btnAdjust.className = 'btn hidden';
+        var btnFinish = document.getElementById('btn-finish');
+        if (btnFinish) btnFinish.className = 'btn hidden';
+        var subtext = document.getElementById('k-timer-subtext');
+        if (subtext) subtext.className = 'hidden';
       }
 
       if (state.activeId && delBookMap[state.activeId]) {
