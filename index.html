@@ -171,7 +171,7 @@
       font-weight: 900;
       font-family: Courier, monospace, sans-serif;
       letter-spacing: 2px;
-      margin: 4px 0 12px 0;
+      margin: 4px 0 6px 0;
     }
 
     .stat-row {
@@ -504,14 +504,20 @@
         <div class="focus-box">
           <div class="book-badge-name" id="k-book-title-display">未选择图书</div>
           <div class="timer-display" id="k-timer-display">00:00:00</div>
-          <div id="k-timer-subtext" style="font-size:11px; color:#059669; font-weight:bold; margin-bottom:8px;" class="hidden">🟢 真实时间戳后台挂机中：退出网页去读书，回来自动精确结算！</div>
+          <div id="k-timer-subtext" style="font-size:11px; color:#059669; font-weight:bold; margin-bottom:8px;" class="hidden">
+            🟢 真实时间戳保底：即使退出网页，再次打开自动计算时长！
+          </div>
         </div>
 
         <div class="btn-group">
           <button id="btn-start" class="btn btn-solid" style="height:56px; font-size:18px;" onclick="doStart()">▶ 开始阅读</button>
           <button id="btn-pause" class="btn hidden" style="height:56px; font-size:18px;" onclick="doPause()">⏸ 暂停</button>
         </div>
-        <button id="btn-finish" class="btn hidden" style="height:56px; font-size:18px; margin-top: 6px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
+        
+        <div class="btn-group" id="k-running-tools" style="margin-top: 6px;" class="hidden">
+          <button id="btn-adjust" class="btn hidden" style="height:56px; font-size:15px; background:#f1f5f9;" onclick="doAdjustTime()">⏱ 校准/修改时长</button>
+          <button id="btn-finish" class="btn hidden" style="height:56px; font-size:17px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
+        </div>
 
         <div class="section-divider" style="margin-top: 14px;"></div>
 
@@ -723,6 +729,31 @@
       return origin + '/api/sync';
     }
 
+    function setCookie(name, value, days) {
+      try {
+        var expires = "";
+        if (days) {
+          var date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (encodeURIComponent(value) || "") + expires + "; path=/";
+      } catch(e) {}
+    }
+
+    function getCookie(name) {
+      try {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i];
+          while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+        }
+      } catch(e) {}
+      return null;
+    }
+
     window.onload = function() {
       loadData();
       startClock();
@@ -741,6 +772,15 @@
         fetchCloudData(false);
       }, 15000);
     };
+
+    // 监听 Kindle 浏览器唤醒/恢复页面事件
+    window.onfocus = function() { restoreActiveTimer(); };
+    if (window.addEventListener) {
+      window.addEventListener('pageshow', function() { restoreActiveTimer(); });
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) restoreActiveTimer();
+      });
+    }
 
     function startClock() {
       function tick() {
@@ -764,12 +804,33 @@
           if (!state.deletedSessionIds) state.deletedSessionIds = [];
         }
       } catch(e) {}
+
+      // Cookie 强力双保险退避：如果 localStorage 丢失了 activeTimer，从 Cookie 恢复！
+      if (!state.activeTimer) {
+        try {
+          var cTimer = getCookie('k_active_timer');
+          if (cTimer) {
+            var parsedTimer = JSON.parse(cTimer);
+            if (parsedTimer && parsedTimer.isRunning) {
+              state.activeTimer = parsedTimer;
+            }
+          }
+        } catch(e) {}
+      }
     }
 
     function saveData() {
       try {
         localStorage.setItem('k_reading_v4', JSON.stringify(state));
       } catch(e) {}
+      
+      // 同步设置 Cookie 双保险
+      if (state.activeTimer) {
+        setCookie('k_active_timer', JSON.stringify(state.activeTimer), 30);
+      } else {
+        setCookie('k_active_timer', '', -1);
+      }
+
       pushCloudData(null);
     }
 
@@ -781,6 +842,7 @@
 
         var btnStart = document.getElementById('btn-start');
         var btnPause = document.getElementById('btn-pause');
+        var btnAdjust = document.getElementById('btn-adjust');
         var btnFinish = document.getElementById('btn-finish');
         var subtext = document.getElementById('k-timer-subtext');
 
@@ -794,6 +856,7 @@
           
           if (btnStart) btnStart.className = 'btn btn-solid hidden';
           if (btnPause) btnPause.className = 'btn';
+          if (btnAdjust) btnAdjust.className = 'btn';
           if (btnFinish) btnFinish.className = 'btn';
 
           clearInterval(timer.intervalId);
@@ -809,6 +872,7 @@
             btnStart.className = 'btn btn-solid';
           }
           if (btnPause) btnPause.className = 'btn hidden';
+          if (btnAdjust) btnAdjust.className = 'btn';
           if (btnFinish) btnFinish.className = 'btn';
           updateTimerDisplay(timer.elapsedSec);
         }
@@ -1142,6 +1206,7 @@
 
       document.getElementById('btn-start').className = 'btn btn-solid hidden';
       document.getElementById('btn-pause').className = 'btn';
+      document.getElementById('btn-adjust').className = 'btn';
       document.getElementById('btn-finish').className = 'btn';
       var subtext = document.getElementById('k-timer-subtext');
       if (subtext) subtext.className = 'focus-box';
@@ -1167,6 +1232,29 @@
       btnStart.innerHTML = '▶ 继续阅读';
       btnStart.className = 'btn btn-solid';
       document.getElementById('btn-pause').className = 'btn hidden';
+      document.getElementById('btn-adjust').className = 'btn';
+    }
+
+    function doAdjustTime() {
+      var currentMin = Math.floor(timer.elapsedSec / 60);
+      var input = prompt('当前根据真实时间计算用时为 ' + currentMin + ' 分钟。\n如果你看书耗时不同，请输入最终打卡的真实分钟数：', currentMin);
+      if (input !== null) {
+        var m = parseInt(input, 10);
+        if (!isNaN(m) && m >= 0) {
+          var targetSec = m * 60;
+          timer.elapsedSec = targetSec;
+          var now = new Date().getTime();
+          if (state.activeTimer) {
+            state.activeTimer.startTime = now - (targetSec * 1000);
+            if (state.activeTimer.isPaused) {
+              state.activeTimer.pausedElapsedSec = targetSec;
+            }
+          }
+          saveData();
+          updateTimerDisplay(targetSec);
+          alert('⏱ 已成功将本次阅读用时校准为 ' + m + ' 分钟！');
+        }
+      }
     }
 
     function onTimerTick() {
@@ -1242,6 +1330,8 @@
       }
       var btnPause = document.getElementById('btn-pause');
       if (btnPause) btnPause.className = 'btn hidden';
+      var btnAdjust = document.getElementById('btn-adjust');
+      if (btnAdjust) btnAdjust.className = 'btn hidden';
       var btnFinish = document.getElementById('btn-finish');
       if (btnFinish) btnFinish.className = 'btn hidden';
       var subtext = document.getElementById('k-timer-subtext');
