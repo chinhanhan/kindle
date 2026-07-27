@@ -930,7 +930,7 @@
           if ((lb.currentPage || 0) > (existing.currentPage || 0)) {
             existing.currentPage = lb.currentPage;
           }
-          if (lb.totalPages && !existing.totalPages) {
+          if ((lb.totalPages || 0) > (existing.totalPages || 0)) {
             existing.totalPages = lb.totalPages;
           }
           if ((lb.progress || 0) > (existing.progress || 0)) {
@@ -1106,7 +1106,7 @@
             pushCloudData(null);
             alert('🎉 成功从 JSON 文件无损恢复阅读数据！');
           } else {
-            alert('解析 JSON 备份文件失败');
+            alert('备份文件数据格式不正确');
           }
         } catch(err) {
           alert('解析 JSON 备份文件失败');
@@ -1206,20 +1206,20 @@
       var curPage = book.currentPage || 0;
       var curTotal = book.totalPages || 0;
 
-      var pageInput = prompt('请输入《' + book.title + '》当前读至第几页：', curPage);
-      if (pageInput === null) return;
-      var pageNum = parseInt(pageInput, 10);
-      if (isNaN(pageNum) || pageNum < 0) pageNum = curPage;
+      var inputStr = prompt('修改《' + book.title + '》的页码信息：\n填 120 (表示读至120页)\n或填 120/300 (表示读至120页/全书300页)：', curPage > 0 ? (curTotal > 0 ? curPage + '/' + curTotal : curPage) : '');
+      if (inputStr === null || inputStr === '') return;
 
-      var totalInput = prompt('请输入《' + book.title + '》的全书总页数：', curTotal);
-      if (totalInput !== null) {
-        var totalNum = parseInt(totalInput, 10);
-        if (!isNaN(totalNum) && totalNum > 0) {
-          book.totalPages = totalNum;
-        }
+      if (inputStr.indexOf('/') !== -1) {
+        var parts = inputStr.split('/');
+        var p1 = parseInt(parts[0], 10);
+        var p2 = parseInt(parts[1], 10);
+        if (!isNaN(p1) && p1 >= 0) book.currentPage = p1;
+        if (!isNaN(p2) && p2 > 0) book.totalPages = p2;
+      } else {
+        var pNum = parseInt(inputStr, 10);
+        if (!isNaN(pNum) && pNum >= 0) book.currentPage = pNum;
       }
 
-      book.currentPage = pageNum;
       if (book.totalPages > 0) {
         book.progress = Math.min(100, Math.round((book.currentPage / book.totalPages) * 100));
         if (book.progress === 100) book.completed = true;
@@ -1328,6 +1328,7 @@
       if (displayElem) displayElem.innerHTML = hs + ':' + ms + ':' + ss;
     }
 
+    /* 一步到位优雅弹框支持 '120' 或 '120/300' 避免 Kindle 连续弹窗刷新 */
     function doFinish() {
       if (!state.activeTimer) return;
       var totalSec = 0;
@@ -1350,25 +1351,21 @@
       if (book) {
         book.totalSec += totalSec;
         var startP = book.currentPage || 0;
-
-        // 提示录入读至页码
-        var pageInput = prompt('🎉 成功记录用时 ' + formatMin(totalSec) + '！\n请输入《' + book.title + '》当前读至第几页 (如第 120 页，留空按原页码存)：', startP);
         var endP = startP;
-        if (pageInput !== null && pageInput !== '') {
-          var parsedP = parseInt(pageInput, 10);
-          if (!isNaN(parsedP) && parsedP >= 0) {
-            endP = parsedP;
-          }
-        }
 
-        // 如果未录入全书总页数，提示录入
-        if (!book.totalPages || book.totalPages <= 0) {
-          var totalPInput = prompt('请输入《' + book.title + '》的全书总页数 (如 300 页，用于算进度 %)：', '');
-          if (totalPInput !== null) {
-            var tNum = parseInt(totalPInput, 10);
-            if (!isNaN(tNum) && tNum > 0) {
-              book.totalPages = tNum;
-            }
+        var defaultVal = startP > 0 ? (book.totalPages > 0 ? startP + '/' + book.totalPages : startP) : '';
+        var inputStr = prompt('🎉 成功打卡用时 ' + formatMin(totalSec) + '！\n请输入《' + book.title + '》当前读至页码\n(可填 120，或填 120/300 自动记录总页数，留空按原页码存)：', defaultVal);
+        
+        if (inputStr !== null && inputStr !== '') {
+          if (inputStr.indexOf('/') !== -1) {
+            var parts = inputStr.split('/');
+            var p1 = parseInt(parts[0], 10);
+            var p2 = parseInt(parts[1], 10);
+            if (!isNaN(p1) && p1 >= 0) endP = p1;
+            if (!isNaN(p2) && p2 > 0) book.totalPages = p2;
+          } else {
+            var parsedP = parseInt(inputStr, 10);
+            if (!isNaN(parsedP) && parsedP >= 0) endP = parsedP;
           }
         }
 
@@ -1959,12 +1956,43 @@
       var mins = parseInt(minsStr, 10);
       if (isNaN(mins) || mins <= 0) return alert('请输入有效的分钟数');
 
+      var startP = book.currentPage || 0;
+      var endP = startP;
+      var pageInput = prompt('请输入当前读至第几页 (可填 120，或填 120/300 记录总页数，留空跳过)：', startP > 0 ? startP : '');
+      if (pageInput !== null && pageInput !== '') {
+        if (pageInput.indexOf('/') !== -1) {
+          var parts = pageInput.split('/');
+          var p1 = parseInt(parts[0], 10);
+          var p2 = parseInt(parts[1], 10);
+          if (!isNaN(p1) && p1 >= 0) endP = p1;
+          if (!isNaN(p2) && p2 > 0) book.totalPages = p2;
+        } else {
+          var parsedP = parseInt(pageInput, 10);
+          if (!isNaN(parsedP) && parsedP >= 0) endP = parsedP;
+        }
+      }
+
+      var pagesRead = Math.max(0, endP - startP);
+      book.currentPage = endP;
+      if (book.totalPages > 0) {
+        book.progress = Math.min(100, Math.round((book.currentPage / book.totalPages) * 100));
+        if (book.progress === 100) book.completed = true;
+      }
+
       var addedSec = mins * 60;
       book.totalSec += addedSec;
+      var minPerPage = pagesRead > 0 ? ((addedSec / 60) / pagesRead).toFixed(1) : 0;
+      var pagesPerHour = addedSec > 0 ? (pagesRead / (addedSec / 3600)).toFixed(0) : 0;
+
       state.sessions.push({
         id: 's_' + new Date().getTime(),
         bookId: book.id,
         sec: addedSec,
+        startPage: startP,
+        endPage: endP,
+        pagesRead: pagesRead,
+        minPerPage: minPerPage,
+        pagesPerHour: pagesPerHour,
         time: new Date().getTime()
       });
       saveData();
@@ -2057,7 +2085,7 @@
         var mPP = s.minPerPage !== undefined ? s.minPerPage : '';
         csv += '"' + new Date(s.time).toLocaleString() + '","' + bTitle + '",' + s.sec + ',"' + sP + '","' + eP + '","' + pR + '","' + mPP + '"\n';
       }
-      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var blob = new Blob([jsonStr], { type: 'text/csv;charset=utf-8;' });
       var link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.setAttribute('download', 'Kindle_Reading_Report.csv');
