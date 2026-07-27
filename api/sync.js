@@ -1,5 +1,5 @@
 // Vercel Serverless Function for Kindle ↔ PC Realtime Sync
-// Supports GET-based push & pull + POST with Tombstone deletion & activeTimer support.
+// Supports GET-based push & pull + POST with Tombstone deletion, activeTimer & Server-Side Atomic Concurrency Merge.
 
 const DEFAULT_GIST_ID = '9906213699cd129c2f8583c6a1b2fa7b';
 const part1 = 'ghp_4ss8CfnV9eXdYY9s';
@@ -19,18 +19,91 @@ export default async function handler(req, res) {
   const gistId = process.env.GIST_ID || DEFAULT_GIST_ID;
   const authHeader = 'token ' + token;
 
-  // Helper to update Gist content with tombstones and activeTimer
-  async function patchGist(books, sessions, deletedBookIds, deletedSessionIds, activeTimer) {
+  // 1. 获取 Gist 上当前最新数据
+  async function fetchCurrentGist() {
+    try {
+      const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+        headers: { 'Authorization': authHeader, 'User-Agent': 'Kindle-Sync-App' }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.files && data.files['kindle_reading_data.json']) {
+          return JSON.parse(data.files['kindle_reading_data.json'].content);
+        }
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  // 2. 服务端原子级增量无损合并 (防止并发覆盖与数据丢失)
+  function mergeServerData(existing, incoming) {
+    if (!existing) return incoming;
+
+    const existingBooks = existing.books || [];
+    const existingSessions = existing.sessions || [];
+    const existingDelBooks = existing.deletedBookIds || [];
+    const existingDelSessions = existing.deletedSessionIds || [];
+
+    const incomingBooks = incoming.books || [];
+    const incomingSessions = incoming.sessions || [];
+    const incomingDelBooks = incoming.deletedBookIds || [];
+    const incomingDelSessions = incoming.deletedSessionIds || [];
+    const incomingTimer = incoming.activeTimer !== undefined ? incoming.activeTimer : (existing.activeTimer || null);
+
+    // 合并墓碑名单
+    const delBookSet = new Set([...existingDelBooks, ...incomingDelBooks]);
+    const delSessSet = new Set([...existingDelSessions, ...incomingDelSessions]);
+
+    // 合并图书
+    const bookMap = {};
+    for (const b of existingBooks) {
+      if (b && !delBookSet.has(b.id)) bookMap[b.id] = b;
+    }
+    for (const b of incomingBooks) {
+      if (!b || delBookSet.has(b.id)) continue;
+      const ex = bookMap[b.id];
+      if (ex) {
+        ex.totalSec = Math.max(ex.totalSec || 0, b.totalSec || 0);
+        ex.currentPage = Math.max(ex.currentPage || 0, b.currentPage || 0);
+        ex.totalPages = Math.max(ex.totalPages || 0, b.totalPages || 0);
+        ex.progress = Math.max(ex.progress || 0, b.progress || 0);
+        ex.completed = ex.completed || b.completed;
+      } else {
+        bookMap[b.id] = b;
+      }
+    }
+
+    // 合并打卡记录
+    const sessMap = {};
+    for (const s of existingSessions) {
+      if (s && s.id && !delSessSet.has(s.id) && !delBookSet.has(s.bookId)) {
+        sessMap[s.id] = s;
+      }
+    }
+    for (const s of incomingSessions) {
+      if (s && s.id && !delSessSet.has(s.id) && !delBookSet.has(s.bookId)) {
+        sessMap[s.id] = s;
+      }
+    }
+
+    return {
+      books: Object.values(bookMap),
+      sessions: Object.values(sessMap),
+      deletedBookIds: Array.from(delBookSet),
+      deletedSessionIds: Array.from(delSessSet),
+      activeTimer: incomingTimer
+    };
+  }
+
+  // 3. 安全更新 Gist 数据
+  async function syncAndPatchGist(incomingData) {
+    const existingData = await fetchCurrentGist();
+    const merged = mergeServerData(existingData, incomingData);
+
     const patchPayload = {
       files: {
         'kindle_reading_data.json': {
-          content: JSON.stringify({
-            books: books || [],
-            sessions: sessions || [],
-            deletedBookIds: deletedBookIds || [],
-            deletedSessionIds: deletedSessionIds || [],
-            activeTimer: activeTimer || null
-          }, null, 2)
+          content: JSON.stringify(merged, null, 2)
         }
       }
     };
@@ -48,7 +121,7 @@ export default async function handler(req, res) {
     return response.ok;
   }
 
-  // 1. 如果是 GET 请求且带有 data 参数，直接将数据推送到云端 Gist (GET 方式)
+  // A. 如果是 GET 请求且带有 data 参数，直接增量推送到云端 Gist (GET 方式)
   if (req.method === 'GET' && req.query && req.query.data) {
     try {
       const rawData = decodeURIComponent(req.query.data);
@@ -59,9 +132,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid data query payload' });
       }
 
-      const ok = await patchGist(parsed.books, parsed.sessions, parsed.deletedBookIds, parsed.deletedSessionIds, parsed.activeTimer);
+      const ok = await syncAndPatchGist(parsed);
       if (ok) {
-        return res.status(200).json({ success: true, message: '数据已成功通过 GET 同步上云！' });
+        return res.status(200).json({ success: true, message: '数据已成功通过 GET 原子增量同步上云！' });
       } else {
         return res.status(500).json({ error: 'Failed to patch Gist via GET' });
       }
@@ -70,7 +143,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 2. 标准 GET: 拉取云端最新数据
+  // B. 标准 GET: 拉取云端最新数据
   if (req.method === 'GET') {
     try {
       const response = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -97,7 +170,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3. POST: 兼容常规客户端、表单提交及老版本 Kindle WebKit
+  // C. POST: 兼容常规客户端、表单提交及老版本 Kindle WebKit
   if (req.method === 'POST') {
     try {
       let body = req.body;
@@ -129,9 +202,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid payload, missing books array' });
       }
 
-      const ok = await patchGist(body.books, body.sessions, body.deletedBookIds, body.deletedSessionIds, body.activeTimer);
+      const ok = await syncAndPatchGist(body);
       if (ok) {
-        return res.status(200).json({ success: true, message: '数据已安全同步上云！' });
+        return res.status(200).json({ success: true, message: '数据已原子增量同步上云！' });
       } else {
         return res.status(500).json({ error: 'Failed to patch Gist via POST' });
       }
