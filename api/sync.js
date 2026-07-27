@@ -1,5 +1,5 @@
 // Vercel Serverless Function for Kindle ↔ PC Realtime Sync
-// Supports GET-based push & pull + POST with Tombstone deletion support for legacy Kindle WebKit browsers.
+// Supports GET-based push & pull + POST with Tombstone deletion & activeTimer support.
 
 const DEFAULT_GIST_ID = '9906213699cd129c2f8583c6a1b2fa7b';
 const part1 = 'ghp_4ss8CfnV9eXdYY9s';
@@ -19,8 +19,8 @@ export default async function handler(req, res) {
   const gistId = process.env.GIST_ID || DEFAULT_GIST_ID;
   const authHeader = 'token ' + token;
 
-  // Helper to update Gist content with tombstones
-  async function patchGist(books, sessions, deletedBookIds, deletedSessionIds) {
+  // Helper to update Gist content with tombstones and activeTimer
+  async function patchGist(books, sessions, deletedBookIds, deletedSessionIds, activeTimer) {
     const patchPayload = {
       files: {
         'kindle_reading_data.json': {
@@ -28,7 +28,8 @@ export default async function handler(req, res) {
             books: books || [],
             sessions: sessions || [],
             deletedBookIds: deletedBookIds || [],
-            deletedSessionIds: deletedSessionIds || []
+            deletedSessionIds: deletedSessionIds || [],
+            activeTimer: activeTimer || null
           }, null, 2)
         }
       }
@@ -58,7 +59,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid data query payload' });
       }
 
-      const ok = await patchGist(parsed.books, parsed.sessions, parsed.deletedBookIds, parsed.deletedSessionIds);
+      const ok = await patchGist(parsed.books, parsed.sessions, parsed.deletedBookIds, parsed.deletedSessionIds, parsed.activeTimer);
       if (ok) {
         return res.status(200).json({ success: true, message: '数据已成功通过 GET 同步上云！' });
       } else {
@@ -87,10 +88,10 @@ export default async function handler(req, res) {
           const content = JSON.parse(data.files['kindle_reading_data.json'].content);
           return res.status(200).json(content);
         } catch(e) {
-          return res.status(200).json({ books: [], sessions: [], deletedBookIds: [], deletedSessionIds: [] });
+          return res.status(200).json({ books: [], sessions: [], deletedBookIds: [], deletedSessionIds: [], activeTimer: null });
         }
       }
-      return res.status(200).json({ books: [], sessions: [], deletedBookIds: [], deletedSessionIds: [] });
+      return res.status(200).json({ books: [], sessions: [], deletedBookIds: [], deletedSessionIds: [], activeTimer: null });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -128,7 +129,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid payload, missing books array' });
       }
 
-      const ok = await patchGist(body.books, body.sessions, body.deletedBookIds, body.deletedSessionIds);
+      const ok = await patchGist(body.books, body.sessions, body.deletedBookIds, body.deletedSessionIds, body.activeTimer);
       if (ok) {
         return res.status(200).json({ success: true, message: '数据已安全同步上云！' });
       } else {
