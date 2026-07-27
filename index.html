@@ -452,7 +452,7 @@
       border: 1px solid #e2e8f0;
       border-radius: 18px;
       padding: 28px;
-      width: 520px;
+      width: 560px;
       max-width: 92%;
       box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
     }
@@ -646,7 +646,7 @@
 
     <!-- 历史明细与图书列表 网格 -->
     <div class="pc-grid-2">
-      <!-- 历史记录表格 -->
+      <!-- 历史记录表格 (含页码变动与阅读速率) -->
       <div class="pc-card-item">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
           <strong style="font-size:14px; letter-spacing:0.5px; color:#0f172a;">📝 历史阅读打卡日志记录</strong>
@@ -657,12 +657,14 @@
             <tr>
               <th>打卡时间</th>
               <th>图书名称</th>
-              <th>阅读时长</th>
+              <th>用时</th>
+              <th>读至页码 (翻页)</th>
+              <th>阅读速率</th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody id="pc-history-tbody">
-            <tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无打卡日志记录</td></tr>
+            <tr><td colspan="6" style="text-align:center; color:#94a3b8;">暂无打卡日志记录</td></tr>
           </tbody>
         </table>
       </div>
@@ -699,7 +701,7 @@
           <div id="modal-book-count" style="font-size:22px; font-weight:900; font-family:monospace; color:#7c3aed;">0次</div>
         </div>
       </div>
-      <div style="font-size:13px; font-weight:700; color:#475569; margin-bottom:10px;">📅 该图书打卡日志明细：</div>
+      <div style="font-size:13px; font-weight:700; color:#475569; margin-bottom:10px;">📅 该图书打卡日志与翻页速率轨迹：</div>
       <div id="modal-book-logs" style="max-height:220px; overflow-y:auto; font-size:12px; color:#334155; border:1px solid #e2e8f0; border-radius:8px; padding:10px; background:#f8fafc;"></div>
     </div>
   </div>
@@ -916,7 +918,7 @@
         if (cb.title) bookMap['t_' + cb.title] = cb;
       }
 
-      // 3. 融入本地图书 (剔除墓碑名单中的图书，合并总用时、进度百分比与完成状态)
+      // 3. 融入本地图书 (合并总用时、当前页码、总页数与百分比)
       for (var j = 0; j < state.books.length; j++) {
         var lb = state.books[j];
         if (!lb || lb.title === '测试书' || delBookMap[lb.id]) continue;
@@ -924,6 +926,12 @@
         if (existing) {
           if ((lb.totalSec || 0) > (existing.totalSec || 0)) {
             existing.totalSec = lb.totalSec;
+          }
+          if ((lb.currentPage || 0) > (existing.currentPage || 0)) {
+            existing.currentPage = lb.currentPage;
+          }
+          if (lb.totalPages && !existing.totalPages) {
+            existing.totalPages = lb.totalPages;
           }
           if ((lb.progress || 0) > (existing.progress || 0)) {
             existing.progress = lb.progress;
@@ -1123,8 +1131,9 @@
       for (var i = 0; i < state.books.length; i++) {
         var b = state.books[i];
         var sel = (b.id === state.activeId) ? ' selected' : '';
+        var pageText = b.currentPage ? ' (读至第' + b.currentPage + '页)' : '';
         var pct = b.progress !== undefined ? ' [' + b.progress + '%]' : '';
-        html += '<option value="' + b.id + '"' + sel + '>' + (b.completed ? '✔ ' : '') + escapeStr(b.title) + pct + ' (' + formatMin(b.totalSec) + ')</option>';
+        html += '<option value="' + b.id + '"' + sel + '>' + (b.completed ? '✔ ' : '') + escapeStr(b.title) + pageText + pct + ' (' + formatMin(b.totalSec) + ')</option>';
       }
       select.innerHTML = html;
 
@@ -1169,10 +1178,17 @@
         alert('请输入书名');
         return;
       }
+
+      var totalPagesStr = prompt('请输入《' + title + '》的全书总页数 (如 300 页，也可留空稍后填)：', '');
+      var totalPages = totalPagesStr ? parseInt(totalPagesStr, 10) : 0;
+      if (isNaN(totalPages) || totalPages < 0) totalPages = 0;
+
       var newBook = {
         id: 'b_' + new Date().getTime(),
         title: title,
         totalSec: 0,
+        currentPage: 0,
+        totalPages: totalPages,
         progress: 0,
         completed: false
       };
@@ -1186,17 +1202,31 @@
     function updateBookProgress(bId) {
       var book = getBookById(bId);
       if (!book) return;
-      var curPct = book.progress !== undefined ? book.progress : 0;
-      var input = prompt('请输入《' + book.title + '》当前的阅读进度百分比 (0-100)：', curPct);
-      if (input !== null) {
-        var num = parseInt(input, 10);
-        if (!isNaN(num)) {
-          book.progress = Math.min(100, Math.max(0, num));
-          if (book.progress === 100) book.completed = true;
-          saveData();
-          render();
+      
+      var curPage = book.currentPage || 0;
+      var curTotal = book.totalPages || 0;
+
+      var pageInput = prompt('请输入《' + book.title + '》当前读至第几页：', curPage);
+      if (pageInput === null) return;
+      var pageNum = parseInt(pageInput, 10);
+      if (isNaN(pageNum) || pageNum < 0) pageNum = curPage;
+
+      var totalInput = prompt('请输入《' + book.title + '》的全书总页数：', curTotal);
+      if (totalInput !== null) {
+        var totalNum = parseInt(totalInput, 10);
+        if (!isNaN(totalNum) && totalNum > 0) {
+          book.totalPages = totalNum;
         }
       }
+
+      book.currentPage = pageNum;
+      if (book.totalPages > 0) {
+        book.progress = Math.min(100, Math.round((book.currentPage / book.totalPages) * 100));
+        if (book.progress === 100) book.completed = true;
+      }
+
+      saveData();
+      render();
     }
 
     function doStart() {
@@ -1319,27 +1349,59 @@
       var book = getActiveBook();
       if (book) {
         book.totalSec += totalSec;
+        var startP = book.currentPage || 0;
+
+        // 提示录入读至页码
+        var pageInput = prompt('🎉 成功记录用时 ' + formatMin(totalSec) + '！\n请输入《' + book.title + '》当前读至第几页 (如第 120 页，留空按原页码存)：', startP);
+        var endP = startP;
+        if (pageInput !== null && pageInput !== '') {
+          var parsedP = parseInt(pageInput, 10);
+          if (!isNaN(parsedP) && parsedP >= 0) {
+            endP = parsedP;
+          }
+        }
+
+        // 如果未录入全书总页数，提示录入
+        if (!book.totalPages || book.totalPages <= 0) {
+          var totalPInput = prompt('请输入《' + book.title + '》的全书总页数 (如 300 页，用于算进度 %)：', '');
+          if (totalPInput !== null) {
+            var tNum = parseInt(totalPInput, 10);
+            if (!isNaN(tNum) && tNum > 0) {
+              book.totalPages = tNum;
+            }
+          }
+        }
+
+        var pagesRead = Math.max(0, endP - startP);
+        book.currentPage = endP;
+        if (book.totalPages > 0) {
+          book.progress = Math.min(100, Math.round((book.currentPage / book.totalPages) * 100));
+          if (book.progress === 100) book.completed = true;
+        }
+
+        var minPerPage = pagesRead > 0 ? ((totalSec / 60) / pagesRead).toFixed(1) : 0;
+        var pagesPerHour = totalSec > 0 ? (pagesRead / (totalSec / 3600)).toFixed(0) : 0;
+
         state.sessions.push({
           id: 's_' + new Date().getTime(),
           bookId: book.id,
           sec: totalSec,
+          startPage: startP,
+          endPage: endP,
+          pagesRead: pagesRead,
+          minPerPage: minPerPage,
+          pagesPerHour: pagesPerHour,
           time: new Date().getTime()
         });
-
-        // 提示更新该图书阅读进度百分比
-        var curPct = book.progress !== undefined ? book.progress : 0;
-        var pctInput = prompt('🎉 已成功记录用时 ' + formatMin(totalSec) + '！\n请输入《' + book.title + '》当前的阅读进度百分比 (0-100)，如 65：', curPct);
-        if (pctInput !== null) {
-          var pNum = parseInt(pctInput, 10);
-          if (!isNaN(pNum)) {
-            book.progress = Math.min(100, Math.max(0, pNum));
-            if (book.progress === 100) book.completed = true;
-          }
-        }
       }
 
       state.activeTimer = null;
       saveData();
+      var summaryMsg = '🎉 成功打卡！用时 ' + formatMin(totalSec);
+      if (pagesRead > 0) {
+        summaryMsg += '\n📖 本次从第 ' + startP + ' 页读至第 ' + endP + ' 页 (+' + pagesRead + ' 页)\n⚡ 速率: ' + minPerPage + ' 分/页 (' + pagesPerHour + ' 页/小时)';
+      }
+      alert(summaryMsg);
       resetTimer();
       render();
     }
@@ -1390,10 +1452,11 @@
       for (var j = 0; j < state.books.length; j++) {
         var bk = state.books[j];
         var pct = bk.progress !== undefined ? bk.progress : 0;
+        var pInfo = bk.currentPage ? '读至' + bk.currentPage + (bk.totalPages ? '/' + bk.totalPages : '') + '页' : '未记页码';
         html += '<div class="book-line">' +
                   '<div>' +
                     (bk.completed ? '✔ ' : '') + '《' + escapeStr(bk.title) + '》 (<strong>' + formatMin(bk.totalSec) + '</strong>)' +
-                    '<div style="font-size:11px; color:#475569; margin-top:2px;">进度: <strong>' + pct + '%</strong> <span style="cursor:pointer; font-weight:bold; text-decoration:underline;" onclick="updateBookProgress(\'' + bk.id + '\')">[修改]</span></div>' +
+                    '<div style="font-size:11px; color:#475569; margin-top:2px;">' + pInfo + ' | 进度: <strong>' + pct + '%</strong> <span style="cursor:pointer; font-weight:bold; text-decoration:underline;" onclick="updateBookProgress(\'' + bk.id + '\')">[修改页码]</span></div>' +
                   '</div>' +
                   '<div>' +
                     '<button class="sm-btn" onclick="toggleComplete(\'' + bk.id + '\')">' + (bk.completed ? '未完' : '读完') + '</button> ' +
@@ -1440,7 +1503,7 @@
       var tbody = document.getElementById('pc-history-tbody');
       if (tbody) {
         if (state.sessions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">暂无打卡日志记录</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">暂无打卡日志记录</td></tr>';
         } else {
           var hHtml = '';
           for (var k = state.sessions.length - 1; k >= 0; k--) {
@@ -1452,10 +1515,17 @@
                 break;
               }
             }
+            var pageDiff = (s.endPage !== undefined && s.startPage !== undefined && s.pagesRead > 0)
+              ? '第 ' + s.startPage + ' ➔ ' + s.endPage + ' 页 <strong style="color:#2563eb;">(+' + s.pagesRead + '页)</strong>'
+              : (s.endPage ? '读至第 ' + s.endPage + ' 页' : '未记页码');
+            var speedStr = s.minPerPage > 0 ? s.minPerPage + ' 分/页 (' + s.pagesPerHour + ' 页/小时)' : '-';
+
             hHtml += '<tr>' +
                        '<td><span style="font-family:monospace; color:#64748b;">' + new Date(s.time).toLocaleString() + '</span></td>' +
                        '<td><strong style="cursor:pointer; color:#2563eb; text-decoration:underline;" onclick="openBookDetailModal(\'' + s.bookId + '\')">《' + escapeStr(bTitle) + '》</strong></td>' +
                        '<td><span style="font-weight:700; color:#059669;">' + formatMin(s.sec) + '</span></td>' +
+                       '<td><span style="font-size:12px; color:#334155;">' + pageDiff + '</span></td>' +
+                       '<td><span style="font-size:12px; font-weight:600; color:#8b5cf6;">' + speedStr + '</span></td>' +
                        '<td><button class="pc-action-btn pc-btn-red" style="padding:2px 8px; font-size:11px;" onclick="deleteSession(\'' + s.id + '\')">删除</button></td>' +
                      '</tr>';
           }
@@ -1472,16 +1542,19 @@
           for (var n = 0; n < state.books.length; n++) {
             var bItem = state.books[n];
             var pVal = bItem.progress !== undefined ? bItem.progress : 0;
+            var pageLabel = bItem.currentPage ? '读至' + bItem.currentPage + (bItem.totalPages ? '/' + bItem.totalPages : '') + '页' : '未记页码';
+
             pcHtml += '<div style="border-bottom:1px solid #e2e8f0; padding:12px 0; display:flex; justify-content:space-between; align-items:center;">' +
                         '<div style="flex:1;">' +
                           '<strong style="cursor:pointer; color:#2563eb; text-decoration:underline; font-size:14px;" onclick="openBookDetailModal(\'' + bItem.id + '\')">《' + escapeStr(bItem.title) + '》</strong> ' +
                           '<span style="font-size:12px; color:#64748b; font-family:monospace; margin-left:6px;">(' + formatMin(bItem.totalSec) + ')</span>' +
                           '<div style="margin-top:6px; display:flex; align-items:center; gap:8px;">' +
-                            '<div style="width:140px; background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">' +
+                            '<div style="width:120px; background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">' +
                               '<div style="width:' + pVal + '%; background:#2563eb; height:100%;"></div>' +
                             '</div>' +
                             '<span style="font-size:12px; font-weight:700; color:#2563eb;">' + pVal + '%</span>' +
-                            '<span style="font-size:11px; color:#64748b; cursor:pointer; text-decoration:underline;" onclick="updateBookProgress(\'' + bItem.id + '\')">[修改进度]</span>' +
+                            '<span style="font-size:11px; color:#64748b; font-weight:600;">(' + pageLabel + ')</span>' +
+                            '<span style="font-size:11px; color:#2563eb; cursor:pointer; text-decoration:underline;" onclick="updateBookProgress(\'' + bItem.id + '\')">[修改页码]</span>' +
                           '</div>' +
                         '</div>' +
                         '<div>' +
@@ -1519,7 +1592,11 @@
         lHtml = '<div style="text-align:center; color:#94a3b8; padding:8px;">暂无打卡日志</div>';
       } else {
         for (var j = logs.length - 1; j >= 0; j--) {
-          lHtml += '<div style="padding:6px 0; border-bottom:1px solid #e2e8f0; font-family:monospace;">📅 ' + new Date(logs[j].time).toLocaleString() + ' — 阅读 <strong style="color:#059669;">' + formatMin(logs[j].sec) + '</strong></div>';
+          var lg = logs[j];
+          var pageDetail = (lg.endPage !== undefined && lg.pagesRead > 0)
+            ? ' — 从第 ' + lg.startPage + ' 页读至第 ' + lg.endPage + ' 页 <strong style="color:#2563eb;">(+' + lg.pagesRead + '页)</strong> | 速率: <strong style="color:#8b5cf6;">' + lg.minPerPage + '分/页</strong>'
+            : (lg.endPage ? ' — 读至第 ' + lg.endPage + ' 页' : '');
+          lHtml += '<div style="padding:8px 0; border-bottom:1px solid #e2e8f0; font-family:monospace; font-size:12px;">📅 ' + new Date(lg.time).toLocaleString() + '<br/>用时 <strong style="color:#059669;">' + formatMin(lg.sec) + '</strong>' + pageDetail + '</div>';
         }
       }
       document.getElementById('modal-book-logs').innerHTML = lHtml;
@@ -1812,7 +1889,7 @@
         ctx.strokeRect(80, yPos, w - 160, 50);
         ctx.fillRect(80, yPos, w - 160, 50);
 
-        var pText = bk.progress !== undefined ? ' [' + bk.progress + '%]' : '';
+        var pText = bk.currentPage ? ' (读至第' + bk.currentPage + '页' + (bk.progress !== undefined ? ' ' + bk.progress + '%' : '') + ')' : '';
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 16px sans-serif';
         ctx.fillText((bk.completed ? '✔ ' : '📖 ') + '《' + escapeStr(bk.title) + '》' + pText, 100, yPos + 32);
@@ -1875,7 +1952,7 @@
       if (!title) return;
       var book = getBookByTitle(title);
       if (!book) {
-        book = { id: 'b_' + new Date().getTime(), title: title, totalSec: 0, progress: 0, completed: false };
+        book = { id: 'b_' + new Date().getTime(), title: title, totalSec: 0, currentPage: 0, totalPages: 0, progress: 0, completed: false };
         state.books.push(book);
       }
       var minsStr = prompt('请输入补录分钟数：');
@@ -1964,7 +2041,7 @@
 
     function exportCSVData() {
       if (state.sessions.length === 0) return alert('暂无历史记录可导出');
-      var csv = '\uFEFF阅读时间,图书名称,阅读时长(秒)\n';
+      var csv = '\uFEFF阅读时间,图书名称,阅读时长(秒),起始页,终点页,翻页数,速率(分/页)\n';
       for (var i = 0; i < state.sessions.length; i++) {
         var s = state.sessions[i];
         var bTitle = '已删图书';
@@ -1974,7 +2051,11 @@
             break;
           }
         }
-        csv += '"' + new Date(s.time).toLocaleString() + '","' + bTitle + '",' + s.sec + '\n';
+        var sP = s.startPage !== undefined ? s.startPage : '';
+        var eP = s.endPage !== undefined ? s.endPage : '';
+        var pR = s.pagesRead !== undefined ? s.pagesRead : '';
+        var mPP = s.minPerPage !== undefined ? s.minPerPage : '';
+        csv += '"' + new Date(s.time).toLocaleString() + '","' + bTitle + '",' + s.sec + ',"' + sP + '","' + eP + '","' + pR + '","' + mPP + '"\n';
       }
       var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       var link = document.createElement('a');
