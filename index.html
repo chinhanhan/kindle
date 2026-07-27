@@ -1179,16 +1179,12 @@
         return;
       }
 
-      var totalPagesStr = prompt('请输入《' + title + '》的全书总页数 (如 300 页，也可留空稍后填)：', '');
-      var totalPages = totalPagesStr ? parseInt(totalPagesStr, 10) : 0;
-      if (isNaN(totalPages) || totalPages < 0) totalPages = 0;
-
       var newBook = {
         id: 'b_' + new Date().getTime(),
         title: title,
         totalSec: 0,
         currentPage: 0,
-        totalPages: totalPages,
+        totalPages: 0,
         progress: 0,
         completed: false
       };
@@ -1449,7 +1445,7 @@
       for (var j = 0; j < state.books.length; j++) {
         var bk = state.books[j];
         var pct = bk.progress !== undefined ? bk.progress : 0;
-        var pInfo = bk.currentPage ? '读至' + bk.currentPage + (bk.totalPages ? '/' + bk.totalPages : '') + '页' : '未记页码';
+        var pInfo = bk.currentPage ? '读至第' + bk.currentPage + (bk.totalPages ? '/' + bk.totalPages : '') + '页' : '未记页码';
         html += '<div class="book-line">' +
                   '<div>' +
                     (bk.completed ? '✔ ' : '') + '《' + escapeStr(bk.title) + '》 (<strong>' + formatMin(bk.totalSec) + '</strong>)' +
@@ -1514,7 +1510,7 @@
             }
             var pageDiff = (s.endPage !== undefined && s.startPage !== undefined && s.pagesRead > 0)
               ? '第 ' + s.startPage + ' ➔ ' + s.endPage + ' 页 <strong style="color:#2563eb;">(+' + s.pagesRead + '页)</strong>'
-              : (s.endPage ? '读至第 ' + s.endPage + ' 页' : '未记页码');
+              : (s.endPage !== undefined && s.endPage !== null && s.endPage !== '' ? '读至第 ' + s.endPage + ' 页' : '未记页码');
             var speedStr = s.minPerPage > 0 ? s.minPerPage + ' 分/页 (' + s.pagesPerHour + ' 页/小时)' : '-';
 
             hHtml += '<tr>' +
@@ -1592,7 +1588,7 @@
           var lg = logs[j];
           var pageDetail = (lg.endPage !== undefined && lg.pagesRead > 0)
             ? ' — 从第 ' + lg.startPage + ' 页读至第 ' + lg.endPage + ' 页 <strong style="color:#2563eb;">(+' + lg.pagesRead + '页)</strong> | 速率: <strong style="color:#8b5cf6;">' + lg.minPerPage + '分/页</strong>'
-            : (lg.endPage ? ' — 读至第 ' + lg.endPage + ' 页' : '');
+            : (lg.endPage !== undefined && lg.endPage !== null && lg.endPage !== '' ? ' — 读至第 ' + lg.endPage + ' 页' : '');
           lHtml += '<div style="padding:8px 0; border-bottom:1px solid #e2e8f0; font-family:monospace; font-size:12px;">📅 ' + new Date(lg.time).toLocaleString() + '<br/>用时 <strong style="color:#059669;">' + formatMin(lg.sec) + '</strong>' + pageDetail + '</div>';
         }
       }
@@ -2052,6 +2048,10 @@
       state.sessions = newSessions;
 
       if (state.activeId === bId) state.activeId = null;
+      if (state.activeTimer && state.activeTimer.bookId === bId) {
+        resetTimer();
+      }
+
       saveData();
       render();
     }
