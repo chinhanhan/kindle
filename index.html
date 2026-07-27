@@ -1064,7 +1064,20 @@
     }
 
     function pushCloudDataGet(payloadStr, cb) {
-      var url = getApiUrl() + '?data=' + encodeURIComponent(payloadStr);
+      var safePayloadStr = payloadStr;
+      if (encodeURIComponent(safePayloadStr).length > 1800) {
+        // 如果报文太长导致 GET URL 溢出 2000 字节，保留最近 30 条记录防阻断
+        var trimmedSessions = (state.sessions || []).slice(-30);
+        safePayloadStr = JSON.stringify({
+          books: state.books,
+          sessions: trimmedSessions,
+          deletedBookIds: state.deletedBookIds || [],
+          deletedSessionIds: state.deletedSessionIds || [],
+          activeTimer: state.activeTimer || null
+        });
+      }
+
+      var url = getApiUrl() + '?data=' + encodeURIComponent(safePayloadStr);
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.onreadystatechange = function() {
@@ -1146,6 +1159,10 @@
     }
 
     function renderSelect() {
+      // 防刷屏保护：如果用户正在 Kindle 上输入添加新书，暂停重绘下拉菜单
+      var addForm = document.getElementById('k-add-form');
+      if (addForm && addForm.className.indexOf('hidden') === -1) return;
+
       var select = document.getElementById('k-select');
       if (!select) return;
       var html = '<option value="">-- 点击选择阅读图书 --</option>';
@@ -1272,7 +1289,11 @@
 
       saveData();
 
-      document.getElementById('btn-start').className = 'btn btn-solid hidden';
+      var btnStart = document.getElementById('btn-start');
+      if (btnStart) {
+        btnStart.innerHTML = '▶ 开始阅读';
+        btnStart.className = 'btn btn-solid hidden';
+      }
       document.getElementById('btn-pause').className = 'btn';
       document.getElementById('btn-adjust').className = 'btn';
       document.getElementById('btn-finish').className = 'btn';
