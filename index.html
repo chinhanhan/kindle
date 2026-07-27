@@ -514,7 +514,7 @@
           <button id="btn-pause" class="btn hidden" style="height:56px; font-size:18px;" onclick="doPause()">⏸ 暂停</button>
         </div>
         
-        <div class="btn-group" id="k-running-tools" style="margin-top: 6px;" class="hidden">
+        <div class="btn-group" id="k-running-tools" style="margin-top: 6px;">
           <button id="btn-adjust" class="btn hidden" style="height:56px; font-size:15px; background:#f1f5f9;" onclick="doAdjustTime()">⏱ 校准/修改时长</button>
           <button id="btn-finish" class="btn hidden" style="height:56px; font-size:17px;" onclick="doFinish()">⏹ 完成并保存本次阅读</button>
         </div>
@@ -2085,7 +2085,7 @@
         var mPP = s.minPerPage !== undefined ? s.minPerPage : '';
         csv += '"' + new Date(s.time).toLocaleString() + '","' + bTitle + '",' + s.sec + ',"' + sP + '","' + eP + '","' + pR + '","' + mPP + '"\n';
       }
-      var blob = new Blob([jsonStr], { type: 'text/csv;charset=utf-8;' });
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       var link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.setAttribute('download', 'Kindle_Reading_Report.csv');
