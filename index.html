@@ -484,7 +484,7 @@
         <!-- ① 选择当前阅读图书 -->
         <div class="section-label">
           <span>① 选择当前阅读图书</span>
-          <span style="font-size:11px; font-weight:normal;">退出网页看书不影响计时间</span>
+          <span style="font-size:11px; font-weight:normal; color:#2563eb;">(退出网页看书不影响计时间)</span>
         </div>
 
         <select id="k-select" onchange="onSelectChange(this.value)">
@@ -504,6 +504,7 @@
         <div class="focus-box">
           <div class="book-badge-name" id="k-book-title-display">未选择图书</div>
           <div class="timer-display" id="k-timer-display">00:00:00</div>
+          <div id="k-timer-subtext" style="font-size:11px; color:#059669; font-weight:bold; margin-bottom:8px;" class="hidden">🟢 真实时间戳后台挂机中：退出网页去读书，回来自动精确结算！</div>
         </div>
 
         <div class="btn-group">
@@ -704,13 +705,13 @@
       sessions: [],
       deletedBookIds: [],
       deletedSessionIds: [],
+      activeTimer: null, // 持久化后台真实时间戳计时状态
       activeId: null
     };
 
     var timer = {
       running: false,
       paused: false,
-      startTime: 0,
       elapsedSec: 0,
       intervalId: null
     };
@@ -732,6 +733,7 @@
         switchToKindleMode();
       }
       render();
+      restoreActiveTimer();
       fetchCloudData(false);
 
       // 开启 15 秒后台全自动静默轮询云同步 (双向实时同源同步)
@@ -771,12 +773,55 @@
       pushCloudData(null);
     }
 
+    function restoreActiveTimer() {
+      if (state.activeTimer && state.activeTimer.isRunning) {
+        var at = state.activeTimer;
+        state.activeId = at.bookId || state.activeId;
+        renderSelect();
+
+        var btnStart = document.getElementById('btn-start');
+        var btnPause = document.getElementById('btn-pause');
+        var btnFinish = document.getElementById('btn-finish');
+        var subtext = document.getElementById('k-timer-subtext');
+
+        if (subtext) subtext.className = 'focus-box';
+
+        if (!at.isPaused) {
+          timer.running = true;
+          timer.paused = false;
+          var now = new Date().getTime();
+          timer.elapsedSec = Math.max(0, Math.floor((now - at.startTime) / 1000));
+          
+          if (btnStart) btnStart.className = 'btn btn-solid hidden';
+          if (btnPause) btnPause.className = 'btn';
+          if (btnFinish) btnFinish.className = 'btn';
+
+          clearInterval(timer.intervalId);
+          timer.intervalId = setInterval(onTimerTick, 1000);
+          onTimerTick();
+        } else {
+          timer.running = true;
+          timer.paused = true;
+          timer.elapsedSec = at.pausedElapsedSec || 0;
+
+          if (btnStart) {
+            btnStart.innerHTML = '▶ 继续阅读';
+            btnStart.className = 'btn btn-solid';
+          }
+          if (btnPause) btnPause.className = 'btn hidden';
+          if (btnFinish) btnFinish.className = 'btn';
+          updateTimerDisplay(timer.elapsedSec);
+        }
+      }
+    }
+
     function mergeCloudAndLocal(cloudData) {
       if (!cloudData) return;
       var cloudBooks = cloudData.books || [];
       var cloudSessions = cloudData.sessions || [];
       var cloudDelBooks = cloudData.deletedBookIds || [];
       var cloudDelSessions = cloudData.deletedSessionIds || [];
+      var cloudTimer = cloudData.activeTimer || null;
 
       if (!state.deletedBookIds) state.deletedBookIds = [];
       if (!state.deletedSessionIds) state.deletedSessionIds = [];
@@ -844,6 +889,13 @@
 
       state.books = mergedBooks;
       state.sessions = mergedSessions;
+
+      // 云端与本地同步活动计时器
+      if (!state.activeTimer && cloudTimer && cloudTimer.isRunning) {
+        state.activeTimer = cloudTimer;
+        restoreActiveTimer();
+      }
+
       if (state.activeId && delBookMap[state.activeId]) {
         state.activeId = state.books.length > 0 ? state.books[0].id : null;
       } else if (!state.activeId && state.books.length > 0) {
@@ -893,7 +945,8 @@
         books: state.books,
         sessions: state.sessions,
         deletedBookIds: state.deletedBookIds || [],
-        deletedSessionIds: state.deletedSessionIds || []
+        deletedSessionIds: state.deletedSessionIds || [],
+        activeTimer: state.activeTimer || null
       };
       var payloadStr = JSON.stringify(payloadObj);
 
@@ -935,7 +988,8 @@
         books: state.books,
         sessions: state.sessions,
         deletedBookIds: state.deletedBookIds || [],
-        deletedSessionIds: state.deletedSessionIds || []
+        deletedSessionIds: state.deletedSessionIds || [],
+        activeTimer: state.activeTimer || null
       })));
       prompt('这是您的全量同步代码，复制后可在电脑端点击“导入代码”瞬间恢复：', code);
     }
@@ -946,7 +1000,8 @@
         books: state.books,
         sessions: state.sessions,
         deletedBookIds: state.deletedBookIds || [],
-        deletedSessionIds: state.deletedSessionIds || []
+        deletedSessionIds: state.deletedSessionIds || [],
+        activeTimer: state.activeTimer || null
       }, null, 2);
       var blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
       var link = document.createElement('a');
@@ -1066,22 +1121,48 @@
       }
       if (timer.running && !timer.paused) return;
 
+      var now = new Date().getTime();
+      var startTime = now;
+      if (timer.paused && state.activeTimer) {
+        startTime = now - (timer.elapsedSec * 1000);
+      }
+
       timer.running = true;
       timer.paused = false;
-      timer.startTime = new Date().getTime() - (timer.elapsedSec * 1000);
+
+      state.activeTimer = {
+        isRunning: true,
+        isPaused: false,
+        startTime: startTime,
+        bookId: state.activeId,
+        pausedElapsedSec: 0
+      };
+
+      saveData();
 
       document.getElementById('btn-start').className = 'btn btn-solid hidden';
       document.getElementById('btn-pause').className = 'btn';
       document.getElementById('btn-finish').className = 'btn';
+      var subtext = document.getElementById('k-timer-subtext');
+      if (subtext) subtext.className = 'focus-box';
 
       clearInterval(timer.intervalId);
       timer.intervalId = setInterval(onTimerTick, 1000);
+      onTimerTick();
     }
 
     function doPause() {
       if (!timer.running) return;
       timer.paused = true;
       clearInterval(timer.intervalId);
+
+      var now = new Date().getTime();
+      var elapsed = Math.floor((now - state.activeTimer.startTime) / 1000);
+
+      state.activeTimer.isPaused = true;
+      state.activeTimer.pausedElapsedSec = elapsed;
+      saveData();
+
       var btnStart = document.getElementById('btn-start');
       btnStart.innerHTML = '▶ 继续阅读';
       btnStart.className = 'btn btn-solid';
@@ -1089,10 +1170,13 @@
     }
 
     function onTimerTick() {
-      if (!timer.running || timer.paused) return;
+      if (!timer.running || timer.paused || !state.activeTimer) return;
       var now = new Date().getTime();
-      timer.elapsedSec = Math.floor((now - timer.startTime) / 1000);
-      var sec = timer.elapsedSec;
+      timer.elapsedSec = Math.floor((now - state.activeTimer.startTime) / 1000);
+      updateTimerDisplay(timer.elapsedSec);
+    }
+
+    function updateTimerDisplay(sec) {
       var h = Math.floor(sec / 3600);
       var m = Math.floor((sec % 3600) / 60);
       var s = sec % 60;
@@ -1101,28 +1185,42 @@
       var ms = m < 10 ? '0' + m : m;
       var ss = s < 10 ? '0' + s : s;
 
-      document.getElementById('k-timer-display').innerHTML = hs + ':' + ms + ':' + ss;
+      var displayElem = document.getElementById('k-timer-display');
+      if (displayElem) displayElem.innerHTML = hs + ':' + ms + ':' + ss;
     }
 
     function doFinish() {
-      if (timer.elapsedSec < 5) {
+      if (!state.activeTimer) return;
+      var totalSec = 0;
+      var now = new Date().getTime();
+
+      if (state.activeTimer.isPaused) {
+        totalSec = state.activeTimer.pausedElapsedSec || timer.elapsedSec;
+      } else {
+        totalSec = Math.floor((now - state.activeTimer.startTime) / 1000);
+      }
+
+      if (totalSec < 5) {
         if (!confirm('阅读不足5秒，取消保存吗？')) return;
         resetTimer();
         return;
       }
+
       clearInterval(timer.intervalId);
       var book = getActiveBook();
       if (book) {
-        book.totalSec += timer.elapsedSec;
+        book.totalSec += totalSec;
         state.sessions.push({
           id: 's_' + new Date().getTime(),
           bookId: book.id,
-          sec: timer.elapsedSec,
+          sec: totalSec,
           time: new Date().getTime()
         });
-        saveData();
       }
-      alert('🎉 成功记录阅读用时 ' + formatMin(timer.elapsedSec));
+
+      state.activeTimer = null;
+      saveData();
+      alert('🎉 成功记录阅读用时 ' + formatMin(totalSec));
       resetTimer();
       render();
     }
@@ -1132,12 +1230,22 @@
       timer.running = false;
       timer.paused = false;
       timer.elapsedSec = 0;
-      document.getElementById('k-timer-display').innerHTML = '00:00:00';
+      state.activeTimer = null;
+      saveData();
+
+      var displayElem = document.getElementById('k-timer-display');
+      if (displayElem) displayElem.innerHTML = '00:00:00';
       var btnStart = document.getElementById('btn-start');
-      btnStart.innerHTML = '▶ 开始阅读';
-      btnStart.className = 'btn btn-solid';
-      document.getElementById('btn-pause').className = 'btn hidden';
-      document.getElementById('btn-finish').className = 'btn hidden';
+      if (btnStart) {
+        btnStart.innerHTML = '▶ 开始阅读';
+        btnStart.className = 'btn btn-solid';
+      }
+      var btnPause = document.getElementById('btn-pause');
+      if (btnPause) btnPause.className = 'btn hidden';
+      var btnFinish = document.getElementById('btn-finish');
+      if (btnFinish) btnFinish.className = 'btn hidden';
+      var subtext = document.getElementById('k-timer-subtext');
+      if (subtext) subtext.className = 'hidden';
     }
 
     function renderStats() {
